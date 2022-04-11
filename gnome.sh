@@ -6,9 +6,15 @@ sudo hwclock --systohc
 sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Syyuu
 
-sudo pacman -S --noconfirm xorg xorg-server wayland xorg-xwayland xdg-desktop-portal gdm gnome gnome-tweaks gnome-shell-extensions chrome-gnome-shell gnome-bluetooth flatpak firefox chromium evince gparted fragments vim virtualbox timeshift blender gimp mpv smplayer zsh zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-theme-powerlevel10k
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
 
-sudo flatpak install -y com.spotify.Client com.google.AndroidStudio com.sublimetext.three org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams
+sudo pacman -S --noconfirm base-devel xorg xorg-server wayland xorg-xwayland xdg-desktop-portal gdm gnome gnome-tweaks gnome-shell-extensions gnome-bluetooth intel-media-driver flatpak firefox chromium evince gparted fragments vim vjre-openjdk-headlessirtualbox blender gimp mpv smplayer zsh zsh-autosuggestions zsh-syntax-highlighting adwaita-icon-theme papirus-icon-theme jre-openjdk 
+
+sudo flatpak install -y com.spotify.Client com.google.AndroidStudio org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams org.gtk.Gtk3theme.adw-gtk3-dark org.gtk.Gtk3theme.Breeze
+
+paru install chrome-gnome-shell timeshift timeshift-autosnap 
 
 sudo systemctl enable gdm
 /bin/echo -e "\e[1;32mREBOOTING IN 5..4..3..2..1..\e[0m"
