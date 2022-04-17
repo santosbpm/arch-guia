@@ -6,17 +6,15 @@ sudo hwclock --systohc
 sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Syyuu
 
+sudo pacman -S --noconfirm base-devel xorg xorg-server wayland xorg-xwayland xdg-desktop-portal gdm gnome gnome-tweaks gnome-shell-extensions intel-media-driver libva-intel-driver libva-utils intel-gpu-tools 
+sudo pacman -S flatpak firefox chromium blender gimp mpv smplayer zsh gnome-themes-extra gnome-icon-theme-extras adwaita-icon-theme adw-gtk-theme volantes-cursors capitaine-cursors papirus-icon-theme jdk-openjdk virtualbox
+sudo pacman -Rns gnome-books gnome-calendar gnome-characters gnome-clocks gnome-contacts gnome-maps gnome-weather gnome-boxes gnome-music totem gnome-software gnome-photos epiphany inskape
+
+sudo flatpak install -y com.spotify.Client com.google.AndroidStudio org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams
+
 git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
-
-sudo pacman -S --noconfirm base-devel xorg xorg-server wayland xorg-xwayland xdg-desktop-portal gdm gnome gnome-tweaks gnome-shell-extensions intel-media-driver libva-intel-driver libva-utils intel-gpu-tools 
-
-sudo pacman -Rns gnome-books gnome-calendar gnome-characters gnome-clocks gnome-contacts gnome-maps gnome-weather gnome-boxes gnome-music totem gnome-software gnome-photos epiphany inskape
-
-sudo pacman -Sy flatpak firefox chromium blender gimp mpv smplayer zsh gnome-themes-extra gnome-icon-theme-extras adwaita-icon-theme adw-gtk-theme volantes-cursors capitaine-cursors papirus-icon-theme jdk-openjdk virtualbox
-
-sudo flatpak install -y com.spotify.Client com.google.AndroidStudio org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams
 
 paru install chrome-gnome-shell timeshift virtualbox-ext-oracle
 
