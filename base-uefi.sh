@@ -2,7 +2,6 @@
 
 ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
-sed -i '178s/.//' /etc/locale.gen
 sed -i '394s/.//' /etc/locale.gen
 locale-gen
 echo "LANG=pt_BR.UTF-8" >> /etc/locale.conf
@@ -18,7 +17,6 @@ pacman -S grub grub-btrfs efibootmgr networkmanager network-manager-applet dialo
 grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 
-systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable sshd
 systemctl enable avahi-daemon
@@ -32,6 +30,6 @@ echo santosbpm:password | chpasswd
 
 echo "santosbpm ALL=(ALL) ALL" >> /etc/sudoers.d/santosbpm
 
-printf "\e[1;32mDone! Type exit, umount -a and reboot.\e[0m"
+printf "Desmonte as partições e reinicie: -> umount -a -> reboot"
 
 
