@@ -6,9 +6,8 @@ sudo hwclock --systohc
 sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Syyuu
 
-sudo pacman -S --noconfirm base-devel xorg xorg-server wayland xorg-xwayland xdg-desktop-portal gdm gnome gnome-tweaks gnome-shell-extensions intel-media-driver libva-intel-driver libva-utils intel-gpu-tools nvidia nvidia-utils nvidia-settings nvidia-prime
-sudo pacman -S neofetch firefox chromium helvum blender gimp mpv smplayer zsh gnome-themes-extra gnome-icon-theme-extras adwaita-icon-theme papirus-icon-theme jdk-openjdk virtualbox android-tools android-udev
-sudo pacman -Rns gnome-books gnome-calendar gnome-characters gnome-clocks gnome-contacts gnome-maps gnome-weather gnome-boxes gnome-music totem gnome-software gnome-photos epiphany
+sudo pacman -S --noconfirm base-devel xorg xorg-server wayland xorg-xwayland gnome-shell nautilus gnome-terminal gnome-tweak-tool gnome-control-center xdg-user-dirs xdg-desktop-portal gdm gnome-tweaks gnome-shell-extensions intel-media-driver libva-intel-driver libva-utils intel-gpu-tools nvidia nvidia-utils nvidia-settings nvidia-prime
+sudo pacman -S neofetch firefox helvum blender gimp mpv transmission-gtk smplayer zsh papirus-icon-theme jdk-openjdk virtualbox android-tools android-udev
 
 sudo pacman -S flatpak
 sudo flatpak install -y com.spotify.Client com.google.AndroidStudio org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams
@@ -17,7 +16,7 @@ git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 
-paru install chrome-gnome-shell virtualbox-ext-oracle adw-gtk-theme capitaine-cursors
+paru gnome-browser-connector-git virtualbox-ext-oracle adw-gtk-theme
 
 # Configuração zsh
 # chsh -s $(which zsh)
