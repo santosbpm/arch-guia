@@ -8,7 +8,7 @@ sudo pacman -Syyuu
 
 sudo pacman -S --noconfirm xorg xorg-server wayland xorg-xwayland gnome-shell nautilus gnome-terminal gnome-tweak-tool gnome-control-center xdg-user-dirs xdg-desktop-portal xdg-desktop-portal-gtk gdm gnome-tweaks gnome-shell-extensions intel-media-driver libva-intel-driver libva-utils intel-gpu-tools nvidia nvidia-utils nvidia-settings nvidia-prime
 sudo pacman -S neofetch firefox helvum blender gimp mpv smplayer vlc transmission-gtk zsh papirus-icon-theme jdk-openjdk virtualbox android-tools android-udev flameshot
-suco pacman -S file-roller gnome-calculator gnome-system-monitor evince gnome-backgrounds gnome-remote-desktop gnome-menus gnome-user-share gedit
+sudo pacman -S file-roller gnome-calculator gnome-system-monitor evince gnome-backgrounds gnome-remote-desktop gnome-menus gnome-user-share gedit
 
 sudo pacman -S flatpak
 sudo flatpak install -y com.spotify.Client com.google.AndroidStudio org.onlyoffice.desktopeditors com.obsproject.Studio com.microsoft.Teams com.jetbrains.PyCharm-Community com.visualstudio.code
