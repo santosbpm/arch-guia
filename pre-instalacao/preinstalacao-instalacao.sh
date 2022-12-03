@@ -13,20 +13,8 @@ mkfs.btrfs --csum xxhash /dev/nvme0n1p2
 
 # create subvolumes
 mount /dev/nvme0n1p2 /mnt
-btrfs subvolume delete /mnt/@
-# btrfs subvolume delete /mnt/@home
-btrfs subvolume delete /mnt/@root
-btrfs subvolume delete /mnt/@log
-btrfs subvolume delete /mnt/@cache
-btrfs subvolume delete /mnt/@games
-btrfs subvolume delete /mnt/@usr_local
-btrfs subvolume delete /mnt/@libvirt
-btrfs subvolume delete /mnt/@flatpak
-btrfs subvolume delete /mnt/@opt
-btrfs subvolume delete /mnt/@snapshots
-
 btrfs subvolume create /mnt/@
-# btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@root
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
@@ -36,7 +24,7 @@ btrfs subvolume create /mnt/@libvirt
 btrfs subvolume create /mnt/@flatpak
 btrfs subvolume create /mnt/@opt
 btrfs subvolume create /mnt/@snapshots
-chown root:games @games
+chown root:games /mnt/@games
 
 chattr +C /mnt/@libvirt
 umount /mnt
@@ -45,11 +33,11 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/nv
 mkdir -p /mnt/boot/efi
 mkdir /mnt/home
 mkdir /mnt/root
-mkdir /mnt/var/log
+mkdir -p /mnt/var/log
 mkdir /mnt/var/cache
 mkdir /mnt/var/games
-mkdir /mnt/usr/local
-mkdir /mnt/var/lib/libvirt
+mkdir -p /mnt/usr/local
+mkdir -p /mnt/var/lib/libvirt
 mkdir /mnt/var/lib/flatpak
 mkdir /mnt/opt
 mkdir /mnt/.snapshots
