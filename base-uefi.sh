@@ -13,8 +13,20 @@ mkfs.btrfs --csum xxhash /dev/nvme0n1p2
 
 # create subvolumes
 mount /dev/nvme0n1p2 /mnt
+btrfs subvolume delete /mnt/@
+# btrfs subvolume delete /mnt/@home
+btrfs subvolume delete /mnt/@root
+btrfs subvolume delete /mnt/@log
+btrfs subvolume delete /mnt/@cache
+btrfs subvolume delete /mnt/@games
+btrfs subvolume delete /mnt/@usr_local
+btrfs subvolume delete /mnt/@libvirt
+btrfs subvolume delete /mnt/@flatpak
+btrfs subvolume delete /mnt/@opt
+btrfs subvolume delete /mnt/@snapshots
+
 btrfs subvolume create /mnt/@
-btrfs subvolume create /mnt/@home
+# btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@root
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
