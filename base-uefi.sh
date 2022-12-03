@@ -8,11 +8,11 @@ sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 pacman -Syy
 
 # create partition
-mkfs.fat -F32 -n BOOT /dev/sda1
-mkfs.btrfs --csum xxhash /dev/sda2
+mkfs.fat -F32 -n BOOT /dev/nvme0n1p1
+mkfs.btrfs --csum xxhash /dev/nvme0n1p2
 
 # create subvolumes
-mount /dev/sda2 /mnt
+mount /dev/nvme0n1p2 /mnt
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@root
@@ -29,7 +29,7 @@ chown root:games @games
 chattr +C /mnt/@libvirt
 umount /mnt
 
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/sda2 /mnt
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/nvme0n1p2 /mnt
 mkdir -p /mnt/boot/efi
 mkdir /mnt/home
 mkdir /mnt/root
@@ -41,17 +41,17 @@ mkdir /mnt/var/lib/libvirt
 mkdir /mnt/var/lib/flatpak
 mkdir /mnt/opt
 mkdir /mnt/.snapshots
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/sda2 /mnt/home
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@root /dev/sda2 /mnt/root
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/sda2 /mnt/var/log
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/sda2 /mnt/var/cache
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/sda2 /mnt/var/games
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@usr_local /dev/sda2 /mnt/usr/local
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/sda2 /mnt/var/lib/libvirt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/sda2 /mnt/var/lib/flatpak
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@opt /dev/sda2 /mnt/opt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/sda2 /mnt/.snapshots
-mount /dev/sda1 /mnt/boot/efi
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/nvme0n1p2 /mnt/home
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@root /dev/nvme0n1p2 /mnt/root
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/nvme0n1p2 /mnt/var/log
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/nvme0n1p2 /mnt/var/cache
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/nvme0n1p2 /mnt/var/games
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@usr_local /dev/nvme0n1p2 /mnt/usr/local
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/nvme0n1p2 /mnt/var/lib/libvirt
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/nvme0n1p2 /mnt/var/lib/flatpak
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@opt /dev/nvme0n1p2 /mnt/opt
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/nvme0n1p2 /mnt/.snapshots
+mount /dev/nvme0n1p1 /mnt/boot/efi
 
 # System Instalation
 pacstrap /mnt base base-devel linux linux-headers linux-firmware intel-ucode zstd btrfs-progs vim
