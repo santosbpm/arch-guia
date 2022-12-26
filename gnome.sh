@@ -13,6 +13,7 @@ sudo btrfs subvolume delete /.snapshots/
 sudo mkdir /.snapshots
 sudo mount -o subvol=@snapshots /dev/nvme0n1p2 /.snapshots/
 sudo mount -a
+sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 # Packets Gnome
