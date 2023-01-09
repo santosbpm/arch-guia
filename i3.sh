@@ -17,7 +17,7 @@ sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 # Packets i3
-sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools i3 i3lock rofi picom nitrogen polybar polkit lxappearance alacritty nautilus evince eog gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu papirus-icon-theme gnome-themes-extra
+sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools i3 i3lock rofi picom nitrogen polybar polkit lxappearance alacritty thunar pamixer pavucontrol network-manager-applet blueman evince eog gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu ttc-iosevka papirus-icon-theme gnome-themes-extra
 
 sudo systemctl enable libvirtd
 sudo systemctl enable snapper-timeline.timer
@@ -31,7 +31,7 @@ git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 
-paru -S ttf-font-icons inxi-git asdf-vm
+paru -S ttf-font-icons inxi-git asdf-vm indicator-kdeconnect networkmanager-dmenu 
 
 # ZSH configuration
 sudo pacman -S zsh
