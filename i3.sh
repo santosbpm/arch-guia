@@ -16,22 +16,25 @@ sudo mount -a
 sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
+sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu ttc-iosevka
+
 # Packets i3
-sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools i3 i3lock rofi picom nitrogen polybar polkit lxappearance alacritty thunar pamixer pavucontrol network-manager-applet blueman evince eog gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu ttc-iosevka papirus-icon-theme gnome-themes-extra
+sudo pacman -S i3 i3lock xdg-user-dirs xdg-utils xdg-desktop-portal xdg-desktop-portal-gtk xautolock xdotool xsel xclip rofi picom nitrogen polybar polkit polkit-gnome lxappearance alacritty thunar thunar-volman pamixer pavucontrol playerctl network-manager-applet blueman light redshfit evince eog obsidian gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv transmission-gtk jdk-openjdk android-tools android-udev wget virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft papirus-icon-theme gtk-engine-murrine
 
 sudo systemctl enable libvirtd
 sudo systemctl enable snapper-timeline.timer
 sudo systemctl enable snapper-cleanup.timer
 
 sudo pacman -S flatpak
-flatpak install -y spotify onlyoffice obsproject teams steam telegram discordapp flatseal
+flatpak remote-add --if-not-exists kdeapps --from https://distribute.kde.org/kdeapps.flatpakrepo
+flatpak install -y spotify onlyoffice obsproject teams steam telegram discordapp flatseal Flameshot Kvantum nord kdeconnect
 
 # AUR helper install
 git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 
-paru -S ttf-font-icons inxi-git asdf-vm indicator-kdeconnect networkmanager-dmenu 
+paru -S ttf-font-icons inxi-git xidlehook
 
 # ZSH configuration
 sudo pacman -S zsh
@@ -45,8 +48,8 @@ git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$
 chsh -s $(which zsh)
 
 echo '# Aliases ZSH' >>~/.zshrc
-echo 'alias paru-full="paru && flatpak update"' >>~/.zshrc
-echo 'alias mirrors-update="sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy"' >>~/.zshrc
+echo 'alias pf="paru && flatpak update"' >>~/.zshrc
+echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syy"' >>~/.zshrc
 echo 'alias intel="sudo intel_gpu_top"' >>~/.zshrc
 
 echo '# PATH' >>~/.zshrc
