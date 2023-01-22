@@ -16,7 +16,7 @@ sudo mount -a
 sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
-sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu ttc-iosevka
+sudo pacman -S xorg xorg-server xorg-xinit libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings nvidia-prime vulkan-headers vulkan-tools noto-fonts ttf-hack-nerd ttf-liberation otf-font-awesome ttf-font-awesome ttf-dejavu ttc-iosevka
 
 # Packets i3
 sudo pacman -S i3 i3lock xdg-user-dirs xdg-utils xdg-desktop-portal xdg-desktop-portal-gtk xautolock xdotool xsel xclip rofi picom nitrogen polybar polkit polkit-gnome lxappearance alacritty thunar thunar-volman pamixer pavucontrol playerctl network-manager-applet blueman light redshift evince eog obsidian gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv transmission-gtk jdk-openjdk android-tools android-udev wget virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft papirus-icon-theme gtk-engine-murrine
