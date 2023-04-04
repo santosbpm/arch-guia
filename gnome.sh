@@ -17,8 +17,9 @@ sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 # Packets Gnome
-sudo pacman -S xorg wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-intel vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus gnome-terminal file-roller gnome-calculator gnome-system-monitor evince eog gnome-backgrounds gnome-user-share gvfs-mtp mtpfs gedit neovim neofetch firefox helvum gimp mpv vlc transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop dnsmasq alacritty iptables-nft noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme gnome-themes-extra
+sudo pacman -S xorg wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus gnome-terminal file-roller gnome-calculator gnome-system-monitor evince eog gnome-backgrounds gnome-user-share dosfstools ntfs-3g nfs-utils gvfs-mtp mtpfs gedit neovim neofetch firefox helvum gimp mpv vlc transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop dnsmasq alacritty iptables-nft noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme gnome-themes-extra
 
+systemctl enable bluetooth
 sudo systemctl enable gdm
 sudo systemctl enable libvirtd
 sudo systemctl enable snapper-timeline.timer
