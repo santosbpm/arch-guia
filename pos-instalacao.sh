@@ -13,7 +13,7 @@ echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 echo root:root | chpasswd
 
 # Necessary Softwares (for me)
-pacman -S grub grub-btrfs efibootmgr networkmanager reflector avahi xdg-user-dirs xdg-utils inetutils dnsutils  bash-completion acpid acpi acpi_call sof-firmware snapper 
+pacman -S grub grub-btrfs efibootmgr networkmanager reflector avahi xdg-user-dirs xdg-utils inetutils dnsutils bash-completion acpid acpi acpi_call sof-firmware snapper 
 
 # Grub install
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
