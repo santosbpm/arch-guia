@@ -13,18 +13,15 @@ echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 echo root:root | chpasswd
 
 # Necessary Softwares (for me)
-pacman -S grub grub-btrfs efibootmgr networkmanager wpa_supplicant dosfstools reflector avahi xdg-user-dirs xdg-utils nfs-utils inetutils dnsutils bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber bash-completion acpi acpi_call sof-firmware os-prober ntfs-3g snapper 
+pacman -S grub grub-btrfs efibootmgr networkmanager reflector avahi xdg-user-dirs xdg-utils inetutils dnsutils  bash-completion acpid acpi acpi_call sof-firmware snapper 
 
 # Grub install
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Inicialize services
-systemctl enable bluetooth
-# systemctl enable sshd
 systemctl enable avahi-daemon
 systemctl enable reflector.timer
-#systemctl enable fstrim.timer
 systemctl enable acpid
 systemctl enable NetworkManager
 
