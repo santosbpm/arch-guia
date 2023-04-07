@@ -192,5 +192,19 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@machines
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
+# mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@swap /dev/mapper/root /mnt/var/swap
+
 mount /dev/nvme0n1p1 /mnt/efi
 ```
+
+## Instalação
+> **Note**: Sim... só agora iniciaremos a instalação.
+### Conteúdo:
+* Instalar os pacotes essenciais
+
+
+## Configurar o sistema
+### Conteúdo:
+* FSTAB
+* CHROOT
+* 
