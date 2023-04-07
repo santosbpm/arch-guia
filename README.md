@@ -15,8 +15,8 @@ As seguintes informações sobre a instalação e configuração do Arch Linux f
 
 ### Configuração:
 * Conectar à internet
-* Partição dos discos e criptografia
-* Formatação das partições
+* Partição dos discos
+* Formatação das partições e criptografia
 * Montar os sistemas de arquivos
 
 > **Note**: Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém eu costumo a fazer somente essas cinco configurações acima pois não sinto necessidade de por exemplo, trocar o layout do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois eles fornecem informações importantes.
@@ -128,7 +128,9 @@ Criação da partição EFI
 mkfs.fat -F 32 -n BOOT /dev/nvme0n1p1
 ```
 
-### Montar os sistemas de arquivos para criar [subvolumes](https://wiki.archlinux.org/title/Btrfs#Subvolumes) do BTRFS no root/nvme0n1p2:
+### Montar os sistemas de arquivos para criar [subvolumes](https://wiki.archlinux.org/title/Btrfs#Subvolumes).
+
+Usando BTRFS no root/nvme0n1p2 e montando em /mnt:
 ```
 mount /dev/mapper/root /mnt
 btrfs subvolume create /mnt/@
@@ -152,24 +154,43 @@ chattr +C /mnt/@docker
 umount /mnt
 ```
 
+Os mesmos passos para o disco sda com os subvolumes necessários:
 
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/nvme0n1p2 /mnt
+```
+mount /dev/mapper/crypt0 /mnt
+btrfs subvolume create /mnt/@games
+btrfs subvolume create /mnt/@libvirt
+btrfs subvolume create /mnt/@VMs
+btrfs subvolume create /mnt/@docker
+btrfs subvolume create /mnt/@flatpak
+btrfs subvolume create /mnt/@downloads
+btrfs subvolume create /mnt/@documents
+btrfs subvolume create /mnt/@pictures
+btrfs subvolume create /mnt/@videos
+btrfs subvolume create /mnt/@cache_home
+
+chattr +C /mnt/@libvirt
+chattr +C /mnt/@VMs
+chattr +C /mnt/@docker
+umount /mnt
+```
+
+Último estágio, as pastas devem ser criadas antes de montar os subvolumes que devem ser montados no seus devidos locais:
+```
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/mapper/root /mnt
 
 mkdir /mnt/efi
 mkdir /mnt/home
 mkdir -p /mnt/var/{log,cache} # swap
-mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines}
-mkdir /mnt/opt
+mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/nvme0n1p2 /mnt/home
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@root /dev/nvme0n1p2 /mnt/root
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/nvme0n1p2 /mnt/var/log
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/nvme0n1p2 /mnt/var/cache
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/nvme0n1p2 /mnt/var/games
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@usr_local /dev/nvme0n1p2 /mnt/usr/local
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/nvme0n1p2 /mnt/var/lib/libvirt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/nvme0n1p2 /mnt/var/lib/flatpak
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@opt /dev/nvme0n1p2 /mnt/opt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/nvme0n1p2 /mnt/.snapshots
-mount /dev/nvme0n1p1 /mnt/boot/efi
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/mapper/root /mnt/home
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/mapper/root /mnt/var/log
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/mapper/root /mnt/var/cache
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/mapper/root /mnt/var/lib/libvirt
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@machines /dev/mapper/root /mnt/var/lib/machines
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
+mount /dev/nvme0n1p1 /mnt/efi
 ```
