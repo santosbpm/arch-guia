@@ -259,6 +259,11 @@ echo "127.0.0.1 localhost" >> /etc/hosts
 echo "::1       localhost" >> /etc/hosts
 echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 ```
+Configuração para o usuário root:
+```
+echo root:root | chpasswd
+```
+
 Instação de alguns pacotes para o funcionamento do sistema e inicialização:
 ```
 pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper bash-completion sbctl
@@ -317,7 +322,7 @@ mkinitcpio -p linux
 ```
 
 ### Sytemd-boot
-A instalação do systemd-boot com o uki só precisa de um comando de instalaão:
+A instalação do systemd-boot com o uki só precisa de um comando de instalação:
 ```
 bootctl install
 ```
@@ -327,7 +332,7 @@ A assinatura do arquivo UKI com [sbctl](https://archlinux.org/packages/?name=sbc
 ```
 sbctl status
 ```
-Cria chavs customizadas:
+Cria chaves customizadas:
 ```
 sbctl create-keys
 ```
