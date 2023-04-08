@@ -136,6 +136,7 @@ mount /dev/mapper/root /mnt
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
+btrfs subvolume create /mnt/@flatpak
 btrfs subvolume create /mnt/@libvirt
 btrfs subvolume create /mnt/@containerd
 btrfs subvolume create /mnt/@machines
@@ -158,7 +159,7 @@ umount /mnt
 Os mesmos passos para o disco sda com os subvolumes necessários:
 
 ```
-mount /dev/mapper/crypt0 /mnt
+mount /dev/mapper/home-crypt /mnt
 btrfs subvolume create /mnt/@games
 btrfs subvolume create /mnt/@libvirt
 btrfs subvolume create /mnt/@VMs
@@ -197,6 +198,11 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containe
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
 
 mount /dev/nvme0n1p1 /mnt/efi
+```
+
+# Criação do arquivo /etc/crypttab para desbloquear o disco secundário:
+```
+echo 'home-crypt         UUID={UUID-sda1}        none       luks' >> /mnt/etc/crypttab
 ```
 
 ## Instalação
@@ -296,7 +302,10 @@ vim /etc/kernel/cmdline
 
 rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID={UUID-swap-device} resume-offset={swapfile-offset} rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
 ```
-
+>**Note**: Foi criado um swap em arquivo para ser usado em hibernação e nesse caso é interessante diminuir a prioridade do swappiness:
+> ```
+> echo wm.swappiness=10 > /etc/sysctl.d/99-swappiness.conf
+> ```
 
 Em seguida, será feito a modificação do arquivo .preset:
 ```
@@ -361,4 +370,9 @@ Agora basta assinar os arquivos com o seguinte comando:
 ```
 sbctl sign -s /local/arquivo
 ```
-
+Sair do ambiente chroot, desmontar as partições e reiniciar a máquina:
+```
+exit
+umount -R /mnt
+reboot
+```
