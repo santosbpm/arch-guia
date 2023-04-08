@@ -1,4 +1,4 @@
-# Guia de Instalação do meu Arch (vers)
+# Guia de Instalação do Arch (versão de teste)
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
 >**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).
@@ -70,7 +70,6 @@ Layout a ser usado:
 |     Device     |    Size    |  Code |          Name         |
 |      :---:     |    :---:   | :---: |         :---:         |
 | /dev/nvme0n1p1 |    512MB   |  EF00 |       EFI System      |
-| /dev/nvme0n1p2 |    16GB    |  8200 | Linux swap (em breve) |
 | /dev/nvme0n1p2 |  restante  |  8304 | Linux x86-64 root (/) |
 |    /dev/sda1   |   total    |  8309 |       Linux LUKS      |
 
@@ -141,7 +140,7 @@ btrfs subvolume create /mnt/@libvirt
 btrfs subvolume create /mnt/@containerd
 btrfs subvolume create /mnt/@machines
 btrfs subvolume create /mnt/@docker
-# btrfs subvolume create /mnt/@swap
+btrfs subvolume create /mnt/@swap
 btrfs subvolume create /mnt/@home
 
 ```
@@ -152,6 +151,7 @@ chattr +C /mnt/@libvirt
 chattr +C /mnt/@containerd
 chattr +C /mnt/@machines
 chattr +C /mnt/@docker
+chattr +C /mnt/@swap
 umount /mnt
 ```
 
@@ -183,8 +183,9 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/ma
 
 mkdir /mnt/efi
 mkdir /mnt/home
-mkdir -p /mnt/var/{log,cache} # swap
+mkdir -p /mnt/var/{log,cache}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
+btrfs filesystem mkswapfile --size 16g /mnt/var/swapfile
 
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/mapper/root /mnt/home
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/mapper/root /mnt/var/log
@@ -194,7 +195,6 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@machines
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
-# mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@swap /dev/mapper/root /mnt/var/swap
 
 mount /dev/nvme0n1p1 /mnt/efi
 ```
@@ -289,10 +289,14 @@ BINARIES=(btrfs)
 Primeiro, deverá ser criado o /etc/kernel/cmdline com os devidos parâmetros do kernel:
 
 ```
+blkid /dev/nvme0n1p2
+btrfs inspect-internal map-swapfile  -r /var/swapfile
+
 vim /etc/kernel/cmdline
 
-rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
+rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID={UUID-swap-device} resume-offset={swapfile-offset} rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
 ```
+
 
 Em seguida, será feito a modificação do arquivo .preset:
 ```
