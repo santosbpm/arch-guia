@@ -208,16 +208,16 @@ pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode zst
 ```
 ## Configurar o sistema
 ### Conteúdo:
-* FSTAB
-* CHROOT
+* Fstab
+* Chroot
 * 
 
-### FSTAB
+### Fstab
 Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
 ```
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
-
+### Chroot
 Para permitir transformar o diretório da instação no seu diretório raiz atual utilize o comando [chroot](https://wiki.archlinux.org/title/Chroot):
 ```
 arch-chroot /mnt
