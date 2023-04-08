@@ -1,4 +1,4 @@
-# Guia de Instalação do Meu Arch
+# Guia de Instalação do meu Arch (vers)
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
 >**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).
@@ -9,8 +9,9 @@
 * dm-crypt + LUKS
 * BTRFS
 * UKI (Unified kernel image)
-* systemd-boot
+* Systemd-boot
 * Secure Boot
+* Nvidia Prime-Offloading 
 
 ## Pré-instalação
 
@@ -60,7 +61,7 @@ Dica: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver 
 
 ### Partição dos discos
 
-> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que desejas-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições leiam [1. 10 Partição dos discos] (https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Parti%C3%A7%C3%A3o_dos_discos).
+> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições leiam [1. 10 Partição dos discos] (https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Parti%C3%A7%C3%A3o_dos_discos).
 
 Layout a ser usado:
 | ################## UEFI com GPT ################# |
@@ -210,7 +211,10 @@ pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode zst
 ### Conteúdo:
 * Fstab
 * Chroot
-* 
+* Initramfs
+* UKI (Unified kernel image)
+* Systemd-boot
+* Secure Boot
 
 ### Fstab
 Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
@@ -222,3 +226,47 @@ Para permitir transformar o diretório da instação no seu diretório raiz atua
 ```
 arch-chroot /mnt
 ```
+Após entrar com chroot no diretório, será executado pequenas configurações e a instalação de pacotes para prosseguir com essa etapa. 
+
+
+Em um primeiro momento será configurado o [fuso horário](https://wiki.archlinux.org/title/Time_zone):
+```
+ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+hwclock --systohc
+```
+
+Seguido pela configuração de idioma:
+```
+sed -i  '/en_US_BR/,+1 s/^#//' /etc/locale.gen
+# sed -i  '/pt_BR/,+1 s/^#//' /etc/locale.gen
+
+locale-gen
+
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+# echo "LANG=pt_BR.UTF-8" >> /etc/locale.conf
+```
+
+Configuração do layout do teclado:
+```
+echo "KEYMAP=us" >> /etc/vconsole.conf
+# echo "KEYMAP=br-abnt2" >> /etc/vconsole.conf
+```
+
+Para configuração do host e da rede:
+```
+cho "archbtw" >> /etc/hostname
+echo "127.0.0.1 localhost" >> /etc/hosts
+echo "::1       localhost" >> /etc/hosts
+echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
+```
+Instação de alguns pacotes para o funcionamento do sistema e inicialização:
+```
+pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper bash-completion
+
+systemctl enable acpid
+systemctl enable NetworkManager
+```
+
+>**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento e formatação de discos.
+
+### Initramfs
