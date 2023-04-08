@@ -21,7 +21,7 @@
 * Formatação das partições e criptografia
 * Montar os sistemas de arquivos
 
-> **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo a fazer somente essas cinco configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
+> **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo fazer somente essas quatro configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
 
 ### Conectar à internet
 Dica: Pule para a próxima configuração caso esteja conectado via cabo ethernet.
@@ -175,7 +175,7 @@ chattr +C /mnt/@VMs
 chattr +C /mnt/@docker
 umount /mnt
 ```
->**Note** : Essa configuração será utilizada após a criação do usuário, pois nela tem pastas que irão dentro do diretório $HOME.
+>**Note** : Esse subvolumes serão utilizados após a criação do usuário, pois nela tem pastas que irão dentro do diretório $HOME.
 
 Último estágio, as pastas devem ser criadas antes de montar os subvolumes que devem ser montadas nos seus devidos locais:
 ```
@@ -261,7 +261,7 @@ echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 ```
 Instação de alguns pacotes para o funcionamento do sistema e inicialização:
 ```
-pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper bash-completion
+pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper bash-completion sbctl
 
 systemctl enable acpid
 systemctl enable NetworkManager
@@ -270,3 +270,86 @@ systemctl enable NetworkManager
 >**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento e formatação de discos.
 
 ### Initramfs
+Alterando os hooks do arquivo /etc/mkinitcpio.conf para aceitar as configurações de disco encriptado com btrfs e o UKI:
+
+```
+HOOKS=(base systemd autodetect modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)
+```
+Adicione também btrfs aos BINARIES:
+```
+BINARIES=(btrfs)
+```
+
+### UKI
+Primeiro, deverá ser criado o /etc/kernel/cmdline com os devidos parâmetros do kernel:
+
+```
+vim /etc/kernel/cmdline
+
+rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
+```
+
+Em seguida, será feito a modificação do arquivo .preset:
+```
+/etc/mkinitcpio.d/linux.preset
+
+ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+ALL_microcode=(/boot/*-ucode.img)
+
+PRESETS=('default' 'fallback')
+
+#default_config="/etc/mkinitcpio.conf"
+#default_image="/boot/initramfs-linux.img"
+default_uki="esp/EFI/Linux/archlinux-linux.efi"
+default_options="--splash=/usr/share/systemd/bootctl/splash-arch.bmp"
+
+#fallback_config="/etc/mkinitcpio.conf"
+#fallback_image="/boot/initramfs-linux-fallback.img"
+fallback_uki="esp/EFI/Linux/archlinux-linux-fallback.efi"
+fallback_options="-S autodetect"
+```
+
+Nessa etapa os comandos são utilizados para construir a UKI ou as UKIs:
+```
+mkdir -p esp/EFI/Linux
+mkinitcpio -p linux
+```
+
+### Sytemd-boot
+A instalação do systemd-boot com o uki só precisa de um comando de instalaão:
+```
+bootctl install
+```
+
+### Secure Boot
+A assinatura do arquivo UKI com [sbctl](https://archlinux.org/packages/?name=sbctl) para funcionamento do secure boot. Verifica o status do secure boot:
+```
+sbctl status
+```
+Cria chavs customizadas:
+```
+sbctl create-keys
+```
+Para registrar as chaves é necessário o seguinte comando:
+```
+sbctl enroll-keys -m
+# sbctl enroll-keys
+```
+>**Warning** : "Alguns firmwares são assinados e verificados com as chaves da Microsoft quando a inicialização segura (secure boot) está habilitada. A não validação de dispositivos pode bloqueá-los." - Arch Wiki. Por esse motivo utilizo o primeiro comando.
+
+Verifique o Secure Boot novamente:
+```
+sbctl status
+```
+
+Verificação para saber quais arquivos devem ser assinados para que o secure boot funcione:
+```
+sbctl verify
+```
+
+Agora basta assinar os arquivos com o seguinte comando:
+```
+sbctl sign -s /local/arquivo
+```
+
