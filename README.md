@@ -143,6 +143,7 @@ btrfs subvolume create /mnt/@machines
 btrfs subvolume create /mnt/@docker
 btrfs subvolume create /mnt/@swap
 btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@snapshots
 
 ```
 
@@ -184,6 +185,7 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/ma
 
 mkdir /mnt/efi
 mkdir /mnt/home
+mkdir /mnt/.snapshots
 mkdir -p /mnt/var/{log,cache,swap}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 
@@ -197,6 +199,7 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@swap /dev/mapper/root /mnt/var/swap
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
 
 mount /dev/nvme0n1p1 /mnt/efi
 ```
