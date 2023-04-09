@@ -284,6 +284,9 @@ su santosbpm
 xdg-user-dirs-update
 mkdir -p /home/santosbpm/{.cache,Games,'VirtualBox VMs'}
 mkdir -p /home/santosbpm/.local/share/{libvirt,flatpak,docker}
+
+exit
+
 chown santosbpm:santosbpm -R /home/santosbpm/
 
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
@@ -349,10 +352,6 @@ Primeiro, deverá ser criado o /etc/kernel/cmdline com os devidos parâmetros do
 vim /etc/kernel/cmdline
 
 rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID={UUID-swap-device} resume-offset={swapfile-offset} rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
-```
->**Note**: Foi criado um swap em arquivo para ser usado em hibernação e nesse caso é interessante diminuir a prioridade do swappiness:
-```
-echo wm.swappiness=10 > /etc/sysctl.d/99-swappiness.conf
 ```
 
 Em seguida, será feito a modificação do arquivo .preset:
