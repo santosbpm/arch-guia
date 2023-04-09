@@ -2,7 +2,7 @@
 
 sudo timedatectl set-ntp true
 sudo hwclock --systohc
-sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist
 sudo pacman -Syyuu
 
 # Configuration Snapper
@@ -17,40 +17,41 @@ sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 # Packets Gnome
-sudo pacman -S xorg wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings opencl-nvidia nvidia-prime vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus gnome-terminal file-roller gnome-calculator gnome-system-monitor evince eog gnome-backgrounds gnome-user-share dosfstools ntfs-3g nfs-utils gvfs-mtp mtpfs gedit neovim neofetch firefox helvum gimp mpv vlc transmission-gtk jdk-openjdk android-tools android-udev flameshot wget virt-manager qemu-desktop dnsmasq alacritty iptables-nft noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme gnome-themes-extra
+sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings nvidia-prime nvtop opencl-nvidia opencl-headers vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator gnome-system-monitor htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
 
 systemctl enable bluetooth
 sudo systemctl enable gdm
-sudo systemctl enable libvirtd
+# sudo systemctl enable libvirtd
+# sudo systemctl enable docker
 sudo systemctl enable snapper-timeline.timer
 sudo systemctl enable snapper-cleanup.timer
 
 sudo pacman -S flatpak
-flatpak install -y spotify onlyoffice obsproject teams pycharm-community steam telegram discordapp flatseal
+flatpak install -y obsidian spotify onlyoffice obsproject pycharm-community steam telegram flatseal flameshot
 
 # AUR helper install
 git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 
-paru -S gnome-browser-connector-git rtl8821cu-morrownr-dkms-git inxi-git asdf-vm
+paru -S gnome-browser-connector-git inxi-git asdf-vm
 
 # ZSH configuration
-sudo pacman -S zsh zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-search zsh-theme-powerlevel10k
-echo '\n\n# Plugins ZSH' >>~/.zshrc
-echo 'source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
-echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
-echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh' >> ~/.zshrc
-echo 'source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh' >> ~/.zshrc
+sudo pacman -S zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/zsh-users/zsh-completions.git ~/.zsh/zsh-completions
 echo 'fpath=(~/.zsh/zsh-completions/src $fpath)' >> ~/.zshrc
 
-echo '\n\n# Aliases ZSH' >>~/.zshrc
-echo 'alias paru-full="paru && flatpak update"' >>~/.zshrc
-echo 'alias mirrors-update="sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy"' >>~/.zshrc
+echo '# Aliases ZSH' >>~/.zshrc
+echo 'alias pf="paru && flatpak update"' >>~/.zshrc
+echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syu"' >>~/.zshrc
 echo 'alias intel="sudo intel_gpu_top"' >>~/.zshrc
 
-echo '\n\n# PATH' >>~/.zshrc
+echo '# PATH' >>~/.zshrc
 echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >>~/.zshrc
 
 chsh -s $(which zsh)
