@@ -514,3 +514,66 @@ Para finalizar é regenerado o initrams:
 `
 sudo mkinitcpio -p linux
 `
+### Flatpak e Paru
+
+Primeiro será feito a instalação do flatpak e utilizaremos ele para instalar mais alguns pacotes:
+`
+sudo pacman -S flaptak
+flatpak install obsidian spotify onlyoffice obsproject pycharm-community steam telegram flatseal flameshot
+`
+Agora a instalação do paru:
+`
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+`
+
+Também será realizado a instalação de alguns pacotes por ele:
+`
+paru -S gnome-browser-connector-git inxi-git asdf-vm ventoy-bin paru-bin
+`
+
+### ZSH
+Será realizada uma instalação e configuração do ZSH da forma que mais uso.
+
+`
+# ZSH configuration
+sudo pacman -S zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+git clone https://github.com/zsh-users/zsh-completions.git ~/.zsh/zsh-completions
+echo 'fpath=(~/.zsh/zsh-completions/src $fpath)' >> ~/.zshrc
+`
+Altere o arquivo .zshrc para ter as seguintes opções configuradas:
+`
+vim ~/.zshrc
+
+ZSH_THEME="powerlevel10k/powerlevel10k"
+...
+plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-search)
+`
+
+Adionando alias:
+`
+echo '# Aliases ZSH' >>~/.zshrc
+echo 'alias pf="paru && flatpak update"' >>~/.zshrc
+echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syu"' >>~/.zshrc
+echo 'alias intel="sudo intel_gpu_top"' >>~/.zshrc
+`
+Adicionando a linha do caminho para o asdf:
+`
+echo '# PATH' >>~/.zshrc
+echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >>~/.zshrc
+`
+Alterando o padrão do shell para o ZSH:
+`
+chsh -s $(which zsh)
+`
+
+Instalação do LunarVim:
+`
+LV_BRANCH='release-1.2/neovim-0.8' bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
+`
