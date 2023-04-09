@@ -37,7 +37,7 @@ rfkill unblock device
 ou
 rfkill unblock all
 ```
-Dica: substitua 'device' pelo NOME (NAME) ou ID do seu Wi-Fi.
+Dica: substitua 'device' pelo NOME (NAME), TIPO (TYPE) ou ID do seu Wi-Fi.
 
 
 Para conectar-se a uma rede sem fio:
@@ -161,19 +161,19 @@ Os mesmos passos para o disco sda com os subvolumes necessários:
 ```
 mount /dev/mapper/home-crypt /mnt
 btrfs subvolume create /mnt/@games
-btrfs subvolume create /mnt/@libvirt
+btrfs subvolume create /mnt/@libvirt_home
+btrfs subvolume create /mnt/@docker_home
+btrfs subvolume create /mnt/@flatpak_home
 btrfs subvolume create /mnt/@VMs
-btrfs subvolume create /mnt/@docker
-btrfs subvolume create /mnt/@flatpak
 btrfs subvolume create /mnt/@downloads
 btrfs subvolume create /mnt/@documents
 btrfs subvolume create /mnt/@pictures
 btrfs subvolume create /mnt/@videos
 btrfs subvolume create /mnt/@cache_home
 
-chattr +C /mnt/@libvirt
+chattr +C /mnt/@libvirt_home
 chattr +C /mnt/@VMs
-chattr +C /mnt/@docker
+chattr +C /mnt/@docker_home
 umount /mnt
 ```
 >**Note** : Esse subvolumes serão utilizados após a criação do usuário, pois nela tem pastas que irão dentro do diretório $HOME.
@@ -184,9 +184,9 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/ma
 
 mkdir /mnt/efi
 mkdir /mnt/home
-mkdir -p /mnt/var/{log,cache}
+mkdir -p /mnt/var/{log,cache,swap}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
-btrfs filesystem mkswapfile --size 16g /mnt/var/swapfile
+
 
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/mapper/root /mnt/home
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/mapper/root /mnt/var/log
@@ -196,13 +196,9 @@ mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@machines
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@swap /dev/mapper/root /mnt/var/swap
 
 mount /dev/nvme0n1p1 /mnt/efi
-```
-
-# Criação do arquivo /etc/crypttab para desbloquear o disco secundário:
-```
-echo 'home-crypt         UUID={UUID-sda1}        none       luks' >> /mnt/etc/crypttab
 ```
 
 ## Instalação
@@ -213,27 +209,21 @@ Instalação dos pacotes essenciais no novo diretório raiz especificado utiliza
 ```
 pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode zstd btrfs-progs vim
 ```
+
 ## Configurar o sistema
 ### Conteúdo:
-* Fstab
 * Chroot
+* Fstab
 * Initramfs
 * UKI (Unified kernel image)
 * Systemd-boot
 * Secure Boot
 
-### Fstab
-Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
-```
-genfstab -U /mnt >> /mnt/etc/fstab
-```
 ### Chroot
 Para permitir transformar o diretório da instação no seu diretório raiz atual utilize o comando [chroot](https://wiki.archlinux.org/title/Chroot):
 ```
 arch-chroot /mnt
 ```
-Após entrar com chroot no diretório, será executado pequenas configurações e a instalação de pacotes para prosseguir com essa etapa. 
-
 
 Em um primeiro momento será configurado o [fuso horário](https://wiki.archlinux.org/title/Time_zone):
 ```
@@ -260,29 +250,90 @@ echo "KEYMAP=us" >> /etc/vconsole.conf
 
 Para configuração do host e da rede:
 ```
-cho "archbtw" >> /etc/hostname
+echo "archbtw" >> /etc/hostname
 echo "127.0.0.1 localhost" >> /etc/hosts
 echo "::1       localhost" >> /etc/hosts
 echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 ```
-Configuração para o usuário root:
-```
-echo root:root | chpasswd
-```
 
 Instação de alguns pacotes para o funcionamento do sistema e inicialização:
 ```
-pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper bash-completion sbctl
+pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper sbctl bash-completion dialog xdg-user-dirs xdg-utils
 
 systemctl enable acpid
 systemctl enable NetworkManager
 ```
 
+>**Note** : Antes de prosseguir eu prefiro fazer alguns configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na /home do usuário e portanto farei os seguintes passos:
+* Criação de um usuário e senha root
+* Criação das pastas desse usuário
+* Montagem dos subvolumes nas pastas
+* Configuração do crypttab
+* Configuração do swapfile 
+
+Criação de um usuário e senha root:
+```
+useradd -m -G log,http,games,dbus,network,power,rfkill,storage,input,audio,wheel santosbpm
+echo santosbpm:santosbpm | chpasswd
+echo root:root | chpasswd
+# echo "santosbpm ALL=(ALL) ALL" >> /etc/sudoers.d/santosbpm
+```
+Criar as pasta do usuário:
+```
+su santosbpm
+xdg-user-dirs-update
+mkdir -p /home/santosbpm/{.cache,Games,'VirtualBox VMs'}
+mkdir -p /home/santosbpm/.local/share/{libvirt,flatpak,docker}
+chown santosbpm:santosbpm -R /home/santosbpm/
+
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/'VirtualBox VMs'
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@downloads /dev/mapper/home-crypt /home/santosbpm/Downloads
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@documents /dev/mapper/home-crypt /home/santosbpm/Documents
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@pictures /dev/mapper/home-crypt /home/santosbpm/Pictures
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@videos /dev/mapper/home-crypt /home/santosbpm/Videos
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache_home /dev/mapper/home-crypt /home/santosbpm/.cache
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt_home /dev/mapper/home-crypt /home/santosbpm/.local/share/libvirt
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak_home /dev/mapper/home-crypt /home/santosbpm/.local/share/flatpak
+mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker_home /dev/mapper/home-crypt /home/santosbpm/.local/share/docker
+
+exit
+```
+
+Criação do arquivo /etc/crypttab para desbloquear o disco secundário:
+```
+echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
+```
+Configuração do swapfile:
+```
+btrfs filesystem mkswapfile --size 16g /mnt/var/swap/swapfile
+swapon /mnt/var/swap/swapfile
+```
+Parâmetros dos kernel para configuração hibernação:
+```
+echo "rd.luks.uuid="$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) "rd.luks.name="$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)"=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID="$(findmnt -no UUID -T /mnt/var/swap/swapfile) "resume_offset="$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) "rw quiet bgrt_disable nmi_watchdog=0 nowatchdog" >> /mnt/etc/kernel/cmdline
+```
+>**Note** : Foi utilizado outros parâmetros para a configuração do UKI.
+
+Configuração swappiness:
+```
+echo wm.swappiness=10 > /mnt/etc/sysctl.d/99-swappiness.conf
+```
+
+### Fstab
+Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
+```
+genfstab -U /mnt >> /mnt/etc/fstab
+```
+
 >**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento e formatação de discos.
 
 ### Initramfs
+Entre com chroot novamente em /mnt:
+```
+arch-chroot /mnt
+```
 Alterando os hooks do arquivo /etc/mkinitcpio.conf para aceitar as configurações de disco encriptado com btrfs e o UKI:
-
 ```
 HOOKS=(base systemd autodetect modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)
 ```
@@ -293,19 +344,16 @@ BINARIES=(btrfs)
 
 ### UKI
 Primeiro, deverá ser criado o /etc/kernel/cmdline com os devidos parâmetros do kernel:
-
+>**Note**: A configuração foi realizado na parte de swapfile e hibernação.
 ```
-blkid /dev/nvme0n1p2
-btrfs inspect-internal map-swapfile  -r /var/swapfile
-
 vim /etc/kernel/cmdline
 
 rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID={UUID-swap-device} resume-offset={swapfile-offset} rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
 ```
 >**Note**: Foi criado um swap em arquivo para ser usado em hibernação e nesse caso é interessante diminuir a prioridade do swappiness:
-> ```
-> echo wm.swappiness=10 > /etc/sysctl.d/99-swappiness.conf
-> ```
+```
+echo wm.swappiness=10 > /etc/sysctl.d/99-swappiness.conf
+```
 
 Em seguida, será feito a modificação do arquivo .preset:
 ```
@@ -370,6 +418,7 @@ Agora basta assinar os arquivos com o seguinte comando:
 ```
 sbctl sign -s /local/arquivo
 ```
+
 Sair do ambiente chroot, desmontar as partições e reiniciar a máquina:
 ```
 exit
