@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[**Início**](#-inicio) **|** [**Pré-instalação**](#-pre-instalacao) **|** [**Instalação**](#-instalacao) **|** [**Configuração do Sistema**](#-configuracao-do-sistema) **|** [**Pós-instalação**](#-pos-instalacao) **|** [**Agradecimentos**](#-agradecimentosa)
+[**Início**](#inicio) **|** [**Pré-instalação**](#pré-instalação) **|** [**Instalação**](#instalação) **|** [**Configurar o Sistema**](#configurar-o-sistema) **|** [**Pós-instalação**](#pós-instalação) **|** [**Agradecimentos**](#agradecimentos)
 
 </div>
 
@@ -22,22 +22,22 @@
 
 ### Principais configurações para o sistema:
 Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
-Hardware do Notebook:
+
+**Hardware do Notebook:**
 * Intel I5-9300H 
 * NVIDIA GTX 1650 Max-Q
 * 16G RAM DDR4-2400mhz
 * NVME 512G + SSD 512G
-<br>
 
-Configurações Gerais: (Em Revisão)
+**Configurações Gerais: (Em Revisão)**
 - [x] BIOS UEFI e GPT
-- [x] Criptografia completa do sistema
 - [x] Sistema de Arquivos BTRFS
-- [x] UKI (Unified kernel image)
-- [x] Systemd-boot
-- [x] Secure Boot
+- [ ] Criptografia completa do sistema
+- [ ] UKI (Unified kernel image)
+- [ ] Systemd-boot
+- [ ] Secure Boot
 - [ ] Swapfile para hibernação e ZRAM
-- [x] Snapper
+- [ ] Snapper
 - [ ] Ambiente GNOME
 - [ ] Nvidia Prime-Offloading 
 
@@ -122,7 +122,7 @@ w
 
 ### [Criptografia de sistema](https://wiki.archlinux.org/title/Dm-crypt_(Portugu%C3%AAs))
 
-Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e [LUKS](https://pt.wikipedia.org/wiki/Linux_Unified_Key_Setup). Aqui iniciaremos a [encriptação completa do sistema](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system):
+Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e [LUKS](https://pt.wikipedia.org/wiki/Linux_Unified_Key_Setup). Aqui iniciaremos a [encriptação completa do sistema](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) que se estenderá durante a instalação:
 
 ```bash
 cryptsetup luksFormat /dev/nvme0n1p2
@@ -134,6 +134,10 @@ Desbloqueando as partições:
 cryptsetup luksOpen /dev/nvme0n1p2 root
 cryptsetup luksOpen /dev/sda1 crypt0
 ```
+
+### [Formatar as partições](https://wiki.archlinux.org/title/Installation_guide#Format_the_partitions)
+
+
 Será utilizado o sistema de arquivos [BTRFS](https://wiki.archlinux.org/title/Btrfs) nessa formatação, somente nvme0n1p2 será utilizada como root (raiz), e nvme0n1p1 será a [ESP](https://wiki.archlinux.org/title/EFI_system_partition) e pra isso precisa ser formatada em [FAT32](https://wiki.archlinux.org/title/FAT).
 Para formatar as partições para BTRFS:
 ```bash
@@ -231,7 +235,7 @@ mount /dev/nvme0n1p1 /mnt/efi
 ---
 
 <!---------------------------------- Instalação --------------------------->
-## Instalação
+## [Instalação](https://wiki.archlinux.org/title/Installation_guide#Installation)
 ### Instalar os pacotes essenciais:
 
 Instalação dos pacotes essenciais no novo diretório raiz especificado utilizando o [pacstrap](https://wiki.archlinux.org/title/Pacstrap):
@@ -243,7 +247,7 @@ pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btr
 
 <!---------------------------------- Configurar o sistema --------------------------->
 
-## Configurar o sistema
+## [Configurar o sistema](https://wiki.archlinux.org/title/Installation_guide#Configure_the_system)
 ### Conteúdo:
 * Chroot
 * Fstab
@@ -253,19 +257,19 @@ pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btr
 * Secure Boot
 
 ### Chroot
-Para permitir transformar o diretório da instação no seu diretório raiz atual utilize o comando [chroot](https://wiki.archlinux.org/title/Chroot):
-```
+Para permitir transformar o diretório da instalação no seu diretório raiz atual será utilizado o comando [arch-chroot](https://wiki.archlinux.org/title/Chroot):
+```bash
 arch-chroot /mnt
 ```
 
 Em um primeiro momento será configurado o [fuso horário](https://wiki.archlinux.org/title/Time_zone):
-```
+```bash
 ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 ```
 
-Seguido pela configuração de idioma:
-```
+Seguido pela configuração de [Localização](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Localiza%C3%A7%C3%A3o):
+```bash
 sed -i  '/en_US_BR/,+1 s/^#//' /etc/locale.gen
 # sed -i  '/pt_BR/,+1 s/^#//' /etc/locale.gen
 
@@ -275,51 +279,63 @@ echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 # echo "LANG=pt_BR.UTF-8" >> /etc/locale.conf
 ```
 
-Configuração do layout do teclado:
-```
+Configuração do [layout do teclado](https://wiki.archlinux.org/title/Installation_guide#Set_the_console_keyboard_layout):
+```bash
 echo "KEYMAP=us" >> /etc/vconsole.conf
 # echo "KEYMAP=br-abnt2" >> /etc/vconsole.conf
 ```
 
 Para configuração do host e da rede:
-```
+```bash
 echo "archbtw" >> /etc/hostname
 echo "127.0.0.1 localhost" >> /etc/hosts
 echo "::1       localhost" >> /etc/hosts
 echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 ```
 
-Instação de alguns pacotes para o funcionamento do sistema e inicialização:
-```
-pacman -S networkmanager reflector acpid acpi acpi_call snapper sbctl bash-completion dialog xdg-user-dirs xdg-utils
+Instalação de alguns pacotes para continuar as configurações:
+```bash
+pacman -S networkmanager reflector acpid acpi snapper sbctl bash-completion dialog xdg-user-dirs xdg-utils
 
 systemctl enable acpid
 systemctl enable NetworkManager
 ```
 
->**Note** : Antes de prosseguir eu prefiro fazer alguns configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na /home do usuário e portanto farei os seguintes passos:
-* Criação de um usuário e senha root
-* Criação das pastas desse usuário
-* Montagem dos subvolumes nas pastas
-* Configuração do crypttab
-* Configuração do swapfile 
+>**Note** : Antes de prosseguir eu prefiro fazer algumas configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na /home do usuário e portanto farei os seguintes passos:
+- Administração de usuários
+- Criação das pastas do usuário para os subvolmes
+- Montagem dos subvolumes nas pastas
+- Configuração do crypttab
+- Configuração do swapfile 
 
-Criação de um usuário e senha root:
-```
+Criação de um usuário (leia [Usuários e Grupos](https://wiki.archlinux.org/title/Users_and_groups)):
+```bash
 useradd -m -G log,http,games,dbus,network,power,rfkill,storage,input,audio,wheel santosbpm
-echo santosbpm:santosbpm | chpasswd
-echo root:root | chpasswd
 echo "santosbpm ALL=(ALL) ALL" >> /etc/sudoers.d/santosbpm
 ```
-Criar as pasta do usuário:
+
+Alteração de senha. Para alterar a senha é necessário usar o passwd:
+```bash
+passwd
+
+# ou senha pré-definida
+echo santosbpm:santosbpm | chpasswd
+echo root:root | chpasswd
+
 ```
+
+Criar as pasta do usuário:
+```bash
 su santosbpm
 xdg-user-dirs-update
 mkdir -p /home/santosbpm/{.cache,Games,'VirtualBox VMs'}
 mkdir -p /home/santosbpm/.local/share/{libvirt,flatpak,docker}
 
 exit
+```
 
+Montar os subvolumes nas pastas criadas anteriormente:
+```
 mount -o defaults,noatime,compress-force=zstd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
 mount -o defaults,noatime,compress-force=zstd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/'VirtualBox VMs'
 mount -o defaults,noatime,compress-force=zstd,subvol=@downloads /dev/mapper/home-crypt /home/santosbpm/Downloads
@@ -334,29 +350,31 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@docker_home /dev/mapper/ho
 exit
 ```
 
-Criação do arquivo /etc/crypttab para desbloquear o disco secundário:
-```
-echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
-```
-Configuração do swapfile:
-```
+Configuração do [swapfile](https://wiki.archlinux.org/title/Swap#Swap_file):
+```bash
 btrfs filesystem mkswapfile --size 16g /mnt/var/swap/swapfile
 swapon /mnt/var/swap/swapfile
 ```
-Parâmetros dos kernel para configuração hibernação:
-```
+
+Parâmetros do kernel para configuração [hibernação no swapfile](https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hibernation):
+```bash
 echo rd.luks.uuid=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) rd.luks.name=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID=$(findmnt -no UUID -T /mnt/var/swap/swapfile) resume_offset=$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) rw quiet bgrt_disable nmi_watchdog=0 nowatchdog >> /mnt/etc/kernel/cmdline
 ```
->**Note** : Foi utilizado outros parâmetros para a configuração do UKI.
+>**Note** : Foi utilizado outros parâmetros para adiantar a configuração do UKI, mas o conteúdo só será abordado mais pra frente.
 
-Configuração swappiness:
-```
+Configuração [swappiness](https://wiki.archlinux.org/title/Swap#Swappiness):
+```bash
 echo wm.swappiness=10 > /mnt/etc/sysctl.d/99-swappiness.conf
+```
+
+Criação do [crypttab](https://wiki.archlinux.org/title/Dm-crypt/System_configuration#crypttab) para desbloquear o sda1:
+```bash
+echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
 ```
 
 ### Fstab
 Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
-```
+```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
