@@ -62,7 +62,7 @@ Dica: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver 
 
 ### Partição dos discos
 
-> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições leiam [1. 10 Partição dos discos] (https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Parti%C3%A7%C3%A3o_dos_discos).
+> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições leiam [1. 10 Partição dos discos](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Parti%C3%A7%C3%A3o_dos_discos).
 
 Layout a ser usado:
 | ################## UEFI com GPT ################# |
@@ -104,7 +104,7 @@ w
 
 ### Formatar as partições e criptografia
 
-Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e formatadas para [BTRFS](https://wiki.archlinux.org/title/Btrfs), somente nvme0n1p2 será utilizada como root (raiz), e sda1 será a ESP e pra isso precisa ser formatado em [FAT32](https://wiki.archlinux.org/title/FAT).
+Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e formatadas para [BTRFS](https://wiki.archlinux.org/title/Btrfs), somente nvme0n1p2 será utilizada como root (raiz), e nvme0n1p1 será a ESP e pra isso precisa ser formatado em [FAT32](https://wiki.archlinux.org/title/FAT).
 
 Inicialmente pode ser feito a [Encriptação das Partições](https://wiki.archlinux.org/title/Dm-crypt/Device_encryption) necessárias com dm-crypt + LUKS:
 ```
@@ -143,7 +143,6 @@ btrfs subvolume create /mnt/@containerd
 btrfs subvolume create /mnt/@machines
 btrfs subvolume create /mnt/@docker
 btrfs subvolume create /mnt/@swap
-btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@snapshots
 ```
 
@@ -161,16 +160,17 @@ Os mesmos passos para o disco sda com os subvolumes necessários:
 
 ```
 mount /dev/mapper/home-crypt /mnt
+btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@games
-btrfs subvolume create /mnt/@libvirt_home
-btrfs subvolume create /mnt/@docker_home
-btrfs subvolume create /mnt/@flatpak_home
 btrfs subvolume create /mnt/@VMs
 btrfs subvolume create /mnt/@downloads
 btrfs subvolume create /mnt/@documents
 btrfs subvolume create /mnt/@pictures
 btrfs subvolume create /mnt/@videos
 btrfs subvolume create /mnt/@cache_home
+btrfs subvolume create /mnt/@libvirt_home
+btrfs subvolume create /mnt/@docker_home
+btrfs subvolume create /mnt/@flatpak_home
 
 chattr +C /mnt/@libvirt_home
 chattr +C /mnt/@VMs
@@ -181,7 +181,7 @@ umount /mnt
 
 Último estágio, as pastas devem ser criadas antes de montar os subvolumes que devem ser montadas nos seus devidos locais:
 ```
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/mapper/root /mnt
+mount -o defaults,noatime,compress-force=zstd,subvol=@ /dev/mapper/root /mnt
 
 mkdir /mnt/efi
 mkdir /mnt/home
@@ -189,17 +189,17 @@ mkdir /mnt/.snapshots
 mkdir -p /mnt/var/{log,cache,swap}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 
+mount -o defaults,noatime,compress-force=zstd,subvol=@home /dev/mapper/home-crypt /mnt/home
 
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/mapper/root /mnt/home
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/mapper/root /mnt/var/log
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/mapper/root /mnt/var/cache
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/mapper/root /mnt/var/lib/libvirt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@machines /dev/mapper/root /mnt/var/lib/machines
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@swap /dev/mapper/root /mnt/var/swap
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
+mount -o defaults,noatime,compress-force=zstd,subvol=@log /dev/mapper/root /mnt/var/log
+mount -o defaults,noatime,compress-force=zstd,subvol=@cache /dev/mapper/root /mnt/var/cache
+mount -o defaults,noatime,compress-force=zstd,subvol=@swap /dev/mapper/root /mnt/var/swap
+mount -o defaults,noatime,compress-force=zstd,subvol=@libvirt /dev/mapper/root /mnt/var/lib/libvirt
+mount -o defaults,noatime,compress-force=zstd,subvol=@machines /dev/mapper/root /mnt/var/lib/machines
+mount -o defaults,noatime,compress-force=zstd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
+mount -o defaults,noatime,compress-force=zstd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
+mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
+mount -o defaults,noatime,compress-force=zstd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
 
 mount /dev/nvme0n1p1 /mnt/efi
 ```
@@ -210,7 +210,7 @@ mount /dev/nvme0n1p1 /mnt/efi
 
 Instalação dos pacotes essenciais no novo diretório raiz especificado utilizando o [pacstrap](https://wiki.archlinux.org/title/Pacstrap):
 ```
-pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode zstd btrfs-progs vim
+pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
 ```
 
 ## Configurar o sistema
@@ -261,7 +261,7 @@ echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 
 Instação de alguns pacotes para o funcionamento do sistema e inicialização:
 ```
-pacman -S networkmanager inetutils reflector acpid acpi acpi_call sof-firmware snapper sbctl bash-completion dialog xdg-user-dirs xdg-utils
+pacman -S networkmanager reflector acpid acpi acpi_call snapper sbctl bash-completion dialog xdg-user-dirs xdg-utils
 
 systemctl enable acpid
 systemctl enable NetworkManager
@@ -290,18 +290,16 @@ mkdir -p /home/santosbpm/.local/share/{libvirt,flatpak,docker}
 
 exit
 
-chown santosbpm:santosbpm -R /home/santosbpm/
-
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/'VirtualBox VMs'
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@downloads /dev/mapper/home-crypt /home/santosbpm/Downloads
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@documents /dev/mapper/home-crypt /home/santosbpm/Documents
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@pictures /dev/mapper/home-crypt /home/santosbpm/Pictures
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@videos /dev/mapper/home-crypt /home/santosbpm/Videos
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache_home /dev/mapper/home-crypt /home/santosbpm/.cache
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt_home /dev/mapper/home-crypt /home/santosbpm/.local/share/libvirt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak_home /dev/mapper/home-crypt /home/santosbpm/.local/share/flatpak
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@docker_home /dev/mapper/home-crypt /home/santosbpm/.local/share/docker
+mount -o defaults,noatime,compress-force=zstd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
+mount -o defaults,noatime,compress-force=zstd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/'VirtualBox VMs'
+mount -o defaults,noatime,compress-force=zstd,subvol=@downloads /dev/mapper/home-crypt /home/santosbpm/Downloads
+mount -o defaults,noatime,compress-force=zstd,subvol=@documents /dev/mapper/home-crypt /home/santosbpm/Documents
+mount -o defaults,noatime,compress-force=zstd,subvol=@pictures /dev/mapper/home-crypt /home/santosbpm/Pictures
+mount -o defaults,noatime,compress-force=zstd,subvol=@videos /dev/mapper/home-crypt /home/santosbpm/Videos
+mount -o defaults,noatime,compress-force=zstd,subvol=@cache_home /dev/mapper/home-crypt /home/santosbpm/.cache
+mount -o defaults,noatime,compress-force=zstd,subvol=@libvirt_home /dev/mapper/home-crypt /home/santosbpm/.local/share/libvirt
+mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak_home /dev/mapper/home-crypt /home/santosbpm/.local/share/flatpak
+mount -o defaults,noatime,compress-force=zstd,subvol=@docker_home /dev/mapper/home-crypt /home/santosbpm/.local/share/docker
 
 exit
 ```
@@ -317,7 +315,7 @@ swapon /mnt/var/swap/swapfile
 ```
 Parâmetros dos kernel para configuração hibernação:
 ```
-echo "rd.luks.uuid="$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) "rd.luks.name="$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)"=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID="$(findmnt -no UUID -T /mnt/var/swap/swapfile) "resume_offset="$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) "rw quiet bgrt_disable nmi_watchdog=0 nowatchdog" >> /mnt/etc/kernel/cmdline
+echo rd.luks.uuid=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) rd.luks.name=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID=$(findmnt -no UUID -T /mnt/var/swap/swapfile) resume_offset=$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) rw quiet bgrt_disable nmi_watchdog=0 nowatchdog >> /mnt/etc/kernel/cmdline
 ```
 >**Note** : Foi utilizado outros parâmetros para a configuração do UKI.
 
@@ -497,9 +495,9 @@ sudo echo "options nvidia_drm modeset=1" >> /etc/etc/modprobe.d/nvidia.conf
 ```
 >**Note** : Aproveintado que estou no modprobe vou adicionar mais dois arquivos que não são para configurações da nvidia. Um arquivo é para parar o beep do tty e o outro é para desativação do watchdog.
 ```
-sudo echo "blacklist pcspkr\nblacklist snd_pcsp" >> /etc/modprobe.d/nobeep.conf
+sudo printf "blacklist pcspkr\nblacklist snd_pcsp" >> /etc/modprobe.d/nobeep.conf
 
-sudo echo "blacklist iTCO_wdt\nblacklist iTCO_vendor_support" >> /etc/modprobe.d/watchdog.conf
+sudo printf "blacklist iTCO_wdt\nblacklist iTCO_vendor_support" >> /etc/modprobe.d/watchdog.conf
 ```
 
 Adicionar os modulos da nvidia em /etc/mkinitcpio.conf:
@@ -514,6 +512,11 @@ Para finalizar é regenerado o initrams:
 ```
 sudo mkinitcpio -p linux
 ```
+>**Warning** : Os hooks do sbctl só funcionam para o pacman, então cada vez que for usar o mkinitcpio não esqueça de rodar o comando sbctl sign-all ou escreva um scrpit pra ser usado  após o sbctl ser usado como no exemplo abaixo:
+`
+echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
+chmod +x /etc/initcpio/post/uki-sbsign
+`
 ### Flatpak e Paru
 
 Primeiro será feito a instalação do flatpak e utilizaremos ele para instalar mais alguns pacotes:
