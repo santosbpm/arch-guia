@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[**Início**](#-inicio) **|** [**Pré-instalação**](#-pre-instalacao) **|** [**Instalação**](#-instalacao) **|** [**Configuração do Sistema**](#-configuracao-do-sistema) **|** [**Pós-instalação**](#-pos-instalacao) **|** [Agradecimentos](#-agradecimentosa)
+[**Início**](#-inicio) **|** [**Pré-instalação**](#-pre-instalacao) **|** [**Instalação**](#-instalacao) **|** [**Configuração do Sistema**](#-configuracao-do-sistema) **|** [**Pós-instalação**](#-pos-instalacao) **|** [**Agradecimentos**](#-agradecimentosa)
 
 </div>
 
@@ -43,14 +43,15 @@ Configurações Gerais: (Em Revisão)
 ## [Pré-instalação](https://wiki.archlinux.org/title/Installation_guide#Pre-installation)
 
 ### Conteúdo:
-* Conectar à internet
+* Conectar à internet(https://wiki.archlinux.org/title/Installation_guide#Connect_to_the_internet)
 * Partição dos discos
-* Particionamento, formatação e criptografia dos discos
+* Criptografia de sistema
+* Formatar as partições
 * Montar os sistemas de arquivos
 
 > **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo fazer somente essas configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
 
-### Conectar à internet
+### [Conectar à internet](https://wiki.archlinux.org/title/Installation_guide#Connect_to_the_internet)
 >*Dica*: Pule para a próxima configuração caso esteja conectado via cabo ethernet.
 
 Utilizando o [rfkill](https://wiki.archlinux.org/title/Network_configuration/Wireless#Rfkill_caveat) para verificar se a placa está bloqueada pelo hardware.
@@ -72,13 +73,14 @@ iwctl --passphrase password station device connect SSID
 >*Dica*: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver espaços coloque entre aspas como "Wi-Fi do Vizinho". 
 <br>
 
-### Partição dos discos
+### [Partição dos discos](https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks)
 
-> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições leiam [1. 10 Partição dos discos](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Parti%C3%A7%C3%A3o_dos_discos).
+> **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições entre no link acima.
+<br>
 
-Layout a ser usado:
-| ################## UEFI com GPT ################# |
-|                        :---:                      |
+**Layout**:
+| ################ UEFI com GPT ################## |
+|                       :---:                      |
 
 |     Device     |    Size    |  Code |          Name         |
 |      :---:     |    :---:   | :---: |         :---:         |
@@ -86,7 +88,7 @@ Layout a ser usado:
 | /dev/nvme0n1p2 |  restante  |  8304 | Linux x86-64 root (/) |
 |    /dev/sda1   |   total    |  8309 |       Linux LUKS      |
 
-Para modificar a tabela de partição de cada disco pode-se usar alguma ferramenta como [fdisk](https://wiki.archlinux.org/title/Fdisk) ou [gdisk](https://wiki.archlinux.org/title/GPT_fdisk). Exemplo:
+Para modificar a [tabela de partição](https://wiki.archlinux.org/title/Partitioning#Partition_table) de cada disco pode-se usar alguma ferramenta como [fdisk](https://wiki.archlinux.org/title/Fdisk) ou [gdisk](https://wiki.archlinux.org/title/GPT_fdisk). Exemplo:
 ```
 gdisk /dev/nvme0n1
 # Sequência de teclas utilizadas dentro do gdisk
@@ -114,38 +116,42 @@ n
 w
 ```
 
-### Formatar as partições e criptografia
+### [Criptografia de sistema](https://wiki.archlinux.org/title/Dm-crypt_(Portugu%C3%AAs))
 
-Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e formatadas para [BTRFS](https://wiki.archlinux.org/title/Btrfs), somente nvme0n1p2 será utilizada como root (raiz), e nvme0n1p1 será a ESP e pra isso precisa ser formatado em [FAT32](https://wiki.archlinux.org/title/FAT).
+Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e [LUKS](https://pt.wikipedia.org/wiki/Linux_Unified_Key_Setup). Aqui iniciaremos a [encriptação completa do sistema](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system):
 
-Inicialmente pode ser feito a [Encriptação das Partições](https://wiki.archlinux.org/title/Dm-crypt/Device_encryption) necessárias com dm-crypt + LUKS:
 ```
 cryptsetup luksFormat /dev/nvme0n1p2
 cryptsetup luksFormat /dev/sda1
 ```
 
-Desbloqueando partição com o mapeador de dispositivos:
+Desbloqueando as partições:
 ```
 cryptsetup luksOpen /dev/nvme0n1p2 root
 cryptsetup luksOpen /dev/sda1 crypt0
 ```
-
-Formantar os dispositivos mapeados para serem usados com BTRFS:
+Será utilizado o sistema de arquivos [BTRFS](https://wiki.archlinux.org/title/Btrfs) nessa formatação, somente nvme0n1p2 será utilizada como root (raiz), e nvme0n1p1 será a [ESP](https://wiki.archlinux.org/title/EFI_system_partition) e pra isso precisa ser formatada em [FAT32](https://wiki.archlinux.org/title/FAT).
+Para formatar as partições para BTRFS:
 ```
 mkfs.btrfs --csum xxhash /dev/mapper/root
 mkfs.btrfs --csum xxhash /dev/mapper/crypt0
 ```
 
-Criação da partição EFI
+Criação da partição EFI:
 ```
 mkfs.fat -F 32 -n BOOT /dev/nvme0n1p1
 ```
 
-### Montar os sistemas de arquivos para criar [subvolumes](https://wiki.archlinux.org/title/Btrfs#Subvolumes).
+### [Montar os sistemas de arquivos](https://wiki.archlinux.org/title/Installation_guide#Mount_the_file_systems)
 
-Usando BTRFS no root/nvme0n1p2 e montando em /mnt:
+Montagem do dispostivo nvme0n1p2 mapeado em /dev/mapper/root em /mnt:
 ```
 mount /dev/mapper/root /mnt
+```
+
+Criação dos [subvolumes](https://wiki.archlinux.org/title/Btrfs#Subvolumes):
+
+```
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
@@ -158,7 +164,7 @@ btrfs subvolume create /mnt/@swap
 btrfs subvolume create /mnt/@snapshots
 ```
 
-Antes de desmontar, desabilite o [CoW (Copy-on-Write)](https://wiki.archlinux.org/title/Btrfs#Copy-on-Write_(CoW)) dos subvolumes que tenha muita escrita de dados:
+Antes de desmontar, desabilite o [CoW (Copy-on-Write)](https://wiki.archlinux.org/title/Btrfs#Copy-on-Write_(CoW)) para subvolumes com muita escrita de dados:
 ```
 chattr +C /mnt/@libvirt
 chattr +C /mnt/@containerd
@@ -168,7 +174,7 @@ chattr +C /mnt/@swap
 umount /mnt
 ```
 
-Os mesmos passos para o disco sda com os subvolumes necessários:
+Repetição da configuração para o sda1 mapeado em /dev/mapper/home-crypt:
 
 ```
 mount /dev/mapper/home-crypt /mnt
@@ -189,7 +195,6 @@ chattr +C /mnt/@VMs
 chattr +C /mnt/@docker_home
 umount /mnt
 ```
->**Note** : Esse subvolumes serão utilizados após a criação do usuário, pois nela tem pastas que irão dentro do diretório $HOME.
 
 Último estágio, as pastas devem ser criadas antes de montar os subvolumes que devem ser montadas nos seus devidos locais:
 ```
@@ -215,6 +220,9 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@snapshots /dev/mapper/root
 
 mount /dev/nvme0n1p1 /mnt/efi
 ```
+
+>**Note** : O /dev/mapper/home-crypt terá continuação após a criação do usuário, pois há subvolumes que deverão ser montados no diretório $HOME.
+<br>
 
 ## Instalação
 ### Conteúdo:
