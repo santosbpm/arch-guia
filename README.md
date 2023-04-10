@@ -16,6 +16,7 @@
 
 >**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).<br>
 
+---
 
 ## Início
 
@@ -40,10 +41,13 @@ Configurações Gerais: (Em Revisão)
 - [ ] Ambiente GNOME
 - [ ] Nvidia Prime-Offloading 
 
+---
+
+<!---------------------------------- Pré-instalação --------------------------->
 ## [Pré-instalação](https://wiki.archlinux.org/title/Installation_guide#Pre-installation)
 
 ### Conteúdo:
-* Conectar à internet(https://wiki.archlinux.org/title/Installation_guide#Connect_to_the_internet)
+* Conectar à internet
 * Partição dos discos
 * Criptografia de sistema
 * Formatar as partições
@@ -57,17 +61,17 @@ Configurações Gerais: (Em Revisão)
 Utilizando o [rfkill](https://wiki.archlinux.org/title/Network_configuration/Wireless#Rfkill_caveat) para verificar se a placa está bloqueada pelo hardware.
 Exibir status atual da placa:
 
-```
+```bash
 rfkill list
 ```
 
 Caso esteja listado como bloqueado (blocked):
-```
+```bash
 rfkill unblock wifi
 ```
 
-Para conectar-se a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/title/Iwd_(Portugu%C3%AAs)#iwctl:
-```
+Para conectar-se a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/title/Iwd_(Portugu%C3%AAs)#iwctl):
+```bash
 iwctl --passphrase password station device connect SSID
 ```
 >*Dica*: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver espaços coloque entre aspas como "Wi-Fi do Vizinho". 
@@ -89,7 +93,7 @@ iwctl --passphrase password station device connect SSID
 |    /dev/sda1   |   total    |  8309 |       Linux LUKS      |
 
 Para modificar a [tabela de partição](https://wiki.archlinux.org/title/Partitioning#Partition_table) de cada disco pode-se usar alguma ferramenta como [fdisk](https://wiki.archlinux.org/title/Fdisk) ou [gdisk](https://wiki.archlinux.org/title/GPT_fdisk). Exemplo:
-```
+```console
 gdisk /dev/nvme0n1
 # Sequência de teclas utilizadas dentro do gdisk
 o
@@ -120,38 +124,38 @@ w
 
 Seguindo com o layout, as partições nvme0n1p2 e sda1 serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e [LUKS](https://pt.wikipedia.org/wiki/Linux_Unified_Key_Setup). Aqui iniciaremos a [encriptação completa do sistema](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system):
 
-```
+```bash
 cryptsetup luksFormat /dev/nvme0n1p2
 cryptsetup luksFormat /dev/sda1
 ```
 
 Desbloqueando as partições:
-```
+```bash
 cryptsetup luksOpen /dev/nvme0n1p2 root
 cryptsetup luksOpen /dev/sda1 crypt0
 ```
 Será utilizado o sistema de arquivos [BTRFS](https://wiki.archlinux.org/title/Btrfs) nessa formatação, somente nvme0n1p2 será utilizada como root (raiz), e nvme0n1p1 será a [ESP](https://wiki.archlinux.org/title/EFI_system_partition) e pra isso precisa ser formatada em [FAT32](https://wiki.archlinux.org/title/FAT).
 Para formatar as partições para BTRFS:
-```
+```bash
 mkfs.btrfs --csum xxhash /dev/mapper/root
 mkfs.btrfs --csum xxhash /dev/mapper/crypt0
 ```
 
 Criação da partição EFI:
-```
+```bash
 mkfs.fat -F 32 -n BOOT /dev/nvme0n1p1
 ```
 
 ### [Montar os sistemas de arquivos](https://wiki.archlinux.org/title/Installation_guide#Mount_the_file_systems)
 
 Montagem do dispostivo nvme0n1p2 mapeado em /dev/mapper/root em /mnt:
-```
+```bash
 mount /dev/mapper/root /mnt
 ```
 
 Criação dos [subvolumes](https://wiki.archlinux.org/title/Btrfs#Subvolumes):
 
-```
+```bash
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
@@ -165,7 +169,7 @@ btrfs subvolume create /mnt/@snapshots
 ```
 
 Antes de desmontar, desabilite o [CoW (Copy-on-Write)](https://wiki.archlinux.org/title/Btrfs#Copy-on-Write_(CoW)) para subvolumes com muita escrita de dados:
-```
+```bash
 chattr +C /mnt/@libvirt
 chattr +C /mnt/@containerd
 chattr +C /mnt/@machines
@@ -176,7 +180,7 @@ umount /mnt
 
 Repetição da configuração para o sda1 mapeado em /dev/mapper/home-crypt:
 
-```
+```bash
 mount /dev/mapper/home-crypt /mnt
 btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@games
@@ -197,7 +201,7 @@ umount /mnt
 ```
 
 Último estágio, as pastas devem ser criadas antes de montar os subvolumes que devem ser montadas nos seus devidos locais:
-```
+```bash
 mount -o defaults,noatime,compress-force=zstd,subvol=@ /dev/mapper/root /mnt
 
 mkdir /mnt/efi
@@ -224,14 +228,20 @@ mount /dev/nvme0n1p1 /mnt/efi
 >**Note** : O /dev/mapper/home-crypt terá continuação após a criação do usuário, pois há subvolumes que deverão ser montados no diretório $HOME.
 <br>
 
+---
+
+<!---------------------------------- Instalação --------------------------->
 ## Instalação
-### Conteúdo:
-* Instalar os pacotes essenciais
+### Instalar os pacotes essenciais:
 
 Instalação dos pacotes essenciais no novo diretório raiz especificado utilizando o [pacstrap](https://wiki.archlinux.org/title/Pacstrap):
-```
+```bash
 pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
 ```
+
+---
+
+<!---------------------------------- Configurar o sistema --------------------------->
 
 ## Configurar o sistema
 ### Conteúdo:
