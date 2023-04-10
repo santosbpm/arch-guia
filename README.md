@@ -32,10 +32,10 @@ Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
 **Configurações Gerais: (Em Revisão)**
 - [x] BIOS UEFI e GPT
 - [x] Sistema de Arquivos BTRFS
-- [ ] Criptografia completa do sistema
-- [ ] UKI (Unified kernel image)
-- [ ] Systemd-boot
-- [ ] Secure Boot
+- [x] Criptografia completa do sistema
+- [x] UKI (Unified kernel image)
+- [x] Systemd-boot
+- [x] Secure Boot
 - [ ] Swapfile para hibernação e ZRAM
 - [ ] Snapper
 - [ ] Ambiente GNOME
@@ -497,9 +497,9 @@ reboot
 
 ---
 
-<!---------------------------------- pós-instalaçaõ --------------------------->
-## Pós-instalação
-###Configurações
+<!---------------------------------- pós-instalação --------------------------->
+## [Pós-instalação](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#P%C3%B3s-instala%C3%A7%C3%A3o)
+### Configurações
 * Horário
 * Atualiazção dos espelhos e sistema
 * Snapper e Snapshots
@@ -508,7 +508,7 @@ reboot
 * Flatpak e Paru
 * ZSH
 
->**Note** : Inicie com a conta do usu
+>**Note** : Inicie com a conta do usuário que foi criado anteriormente.
 
 ### Horário
 Para atualizar e manter atualizado com um servidor ntp:
