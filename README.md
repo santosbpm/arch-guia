@@ -447,50 +447,57 @@ mkinitcpio -p linux
 
 ---
 
-<!---------------------------------- uki --------------------------->
-### Sytemd-boot
+<!---------------------------------- systemd-boot --------------------------->
+### [Sytemd-boot](https://wiki.archlinux.org/title/Unified_kernel_image#systemd-boot)
 A instalação do systemd-boot com o uki só precisa de um comando de instalação:
-```
+```bash
 bootctl install
 ```
 
-### Secure Boot
-A assinatura do arquivo UKI com [sbctl](https://archlinux.org/packages/?name=sbctl) para funcionamento do secure boot. Verifica o status do secure boot:
-```
+---
+
+<!---------------------------------- secure boot --------------------------->
+### [Secure Boot](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot)
+A assinatura do arquivo UKI e do bootloader com [sbctl](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#sbctl) para funcionamento do secure boot. O comando a seguir verifica o status do secure boot:
+```bash
 sbctl status
 ```
-Cria chaves customizadas:
-```
+Criando chaves customizadas:
+```bash
 sbctl create-keys
 ```
 Para registrar as chaves é necessário o seguinte comando:
-```
+```bash
 sbctl enroll-keys -m
 # sbctl enroll-keys
 ```
 >**Warning** : "Alguns firmwares são assinados e verificados com as chaves da Microsoft quando a inicialização segura (secure boot) está habilitada. A não validação de dispositivos pode bloqueá-los." - Arch Wiki. Por esse motivo utilizo o primeiro comando.
 
-Verifique o Secure Boot novamente:
-```
+Faça a verificação do Secure Boot novamente:
+```bash
 sbctl status
 ```
 
 Verificação para saber quais arquivos devem ser assinados para que o secure boot funcione:
-```
+```bash
 sbctl verify
 ```
 
 Agora basta assinar os arquivos com o seguinte comando:
-```
+```bash
 sbctl sign -s /local/arquivo
 ```
 
 Sair do ambiente chroot, desmontar as partições e reiniciar a máquina:
-```
+```bash
 exit
 umount -R /mnt
 reboot
 ```
+
+---
+
+<!---------------------------------- pós-instalaçaõ --------------------------->
 ## Pós-instalação
 ###Configurações
 * Horário
