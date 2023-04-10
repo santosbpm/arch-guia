@@ -1,64 +1,75 @@
-# Guia de Instalação do Arch (versão de teste)
+## <div align="center"><b><a href="README.md"Português(BR)</a> | <a href="README_EN.md">English (coming soon)</a></b></div>
+
+<p align="center">
+  <img src="assets/arch-logo.png" height=120>
+</p>
+
+<div align="center">
+
+[**Início**](#-inicio) **|** [**Pré-instalação**](#-pre-instalacao) **|** [**Instalação**](#-instalacao) **|** [**Configuração do Sistema**](#-configuracao-do-sistema) **|** [**Pós-instalação**](#-pos-instalacao) **|** [Agradecimentos](#-agradecimentosa)
+
+</div>
+
+<div align="center"> 🏹 <h1>Guia de Instalação do Arch (Beta)</h1> </div>
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
->**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).
+>**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).<br>
 
-## Principais configurações para o sistema:
-* BIOS UEFI + GPT
-* NVME 512GB + SSD 512GB (sem RAID)
-* dm-crypt + LUKS
-* BTRFS
-* UKI (Unified kernel image)
-* Systemd-boot
-* Secure Boot
-* Snapper
-* Nvidia Prime-Offloading 
 
-## Pré-instalação
+## Início
+
+### Principais configurações para o sistema:
+Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
+Hardware do Notebook:
+* Intel I5-9300H 
+* NVIDIA GTX 1650 Max-Q
+* 16G RAM DDR4-2400mhz
+* NVME 512G + SSD 512G
+<br>
+
+Configurações Gerais: (Em Revisão)
+- [x] BIOS UEFI e GPT
+- [x] Criptografia completa do sistema
+- [x] Sistema de Arquivos BTRFS
+- [x] UKI (Unified kernel image)
+- [x] Systemd-boot
+- [x] Secure Boot
+- [ ] Swapfile para hibernação e ZRAM
+- [x] Snapper
+- [ ] Ambiente GNOME
+- [ ] Nvidia Prime-Offloading 
+
+## [Pré-instalação](https://wiki.archlinux.org/title/Installation_guide#Pre-installation)
 
 ### Conteúdo:
 * Conectar à internet
 * Partição dos discos
-* Formatação das partições e criptografia
+* Particionamento, formatação e criptografia dos discos
 * Montar os sistemas de arquivos
 
-> **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo fazer somente essas quatro configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
+> **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo fazer somente essas configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
 
 ### Conectar à internet
-Dica: Pule para a próxima configuração caso esteja conectado via cabo ethernet.
+>*Dica*: Pule para a próxima configuração caso esteja conectado via cabo ethernet.
 
-Para verificar se o Wi-Fi (dispositivo sem fio/wireless device) da máquina está ativado:
+Utilizando o [rfkill](https://wiki.archlinux.org/title/Network_configuration/Wireless#Rfkill_caveat) para verificar se a placa está bloqueada pelo hardware.
+Exibir status atual da placa:
+
 ```
-rfkill
+rfkill list
 ```
 
-Caso esteja listado como bloqueado (blocked), faça:
+Caso esteja listado como bloqueado (blocked):
 ```
-rfkill unblock device
-ou
-rfkill unblock all
+rfkill unblock wifi
 ```
-Dica: substitua 'device' pelo NOME (NAME), TIPO (TYPE) ou ID do seu Wi-Fi.
 
-
-Para conectar-se a uma rede sem fio:
+Para conectar-se a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/title/Iwd_(Portugu%C3%AAs)#iwctl:
 ```
 iwctl --passphrase password station device connect SSID
 ```
-
-Para saber o nome do seu 'device', digite:
-```
-device list
-```
-Dica: Esse nome difere do qual o rfkill fornece, geralmente é wlan ou algo relacionado.
-
-Utilizando os seguintes comandos, é possível exibir as redes disponíveis e seus nomes (SSID):
-```
-station device scan
-station device get-networks
-```
-Dica: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver espaços coloque entre aspas como "Wi-Fi do Vizinho". 
-
+>*Dica*: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver espaços coloque entre aspas como "Wi-Fi do Vizinho". 
+<br>
 
 ### Partição dos discos
 
