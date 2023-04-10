@@ -1,4 +1,4 @@
-## <div align="center"><b><a href="README.md"Português(BR)</a> | <a href="README_EN.md">English (coming soon)</a></b></div>
+## <div align="center"><b><a href="README.md">Português(BR)</a> | <a href="README_EN.md">English (coming soon)</a></b></div>
 
 <p align="center">
   <img src="assets/arch-logo.png" height=120>
@@ -10,7 +10,8 @@
 
 </div>
 
-<div align="center"> 🏹 <h1>Guia de Instalação do Arch (Beta)</h1> </div>
+<div align="center"><h1>🏹 Guia de Instalação do Arch (Beta)</h1></div>
+
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
 >**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).<br>
