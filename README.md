@@ -301,6 +301,7 @@ systemctl enable acpid
 systemctl enable NetworkManager
 ```
 <br>
+
 >**Warning** : Antes de prosseguir eu prefiro fazer algumas configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na /home do usuário e portanto farei os seguintes passos:
 - Administração de usuários
 - Criação das pastas do usuário para os subvolmes
@@ -372,40 +373,54 @@ Criação do [crypttab](https://wiki.archlinux.org/title/Dm-crypt/System_configu
 echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
 ```
 
-### Fstab
-Para criar um [FSTAB](https://wiki.archlinux.org/title/Fstab_(Portugu%C3%AAs)) (tabela de partições de disco) utilize a ferramenta genfstab:
+---
+
+<!---------------------------------- fstab --------------------------->
+### [Fstab](https://wiki.archlinux.org/title/Installation_guide#Fstab)
+Para criar um FSTAB utiliza-se a ferramenta genfstab:
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
 >**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento, formatação de discos e hibernação.
 
-### Initramfs
-Entre com chroot novamente em /mnt:
-```
+
+---
+
+<!---------------------------------- initramfs --------------------------->
+### [Initramfs](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Initramfs)
+Primeiro é necessário entrar novamente no diretório /mnt:
+```bash
 arch-chroot /mnt
 ```
-Alterando os hooks do arquivo /etc/mkinitcpio.conf para aceitar as configurações de disco encriptado com btrfs e o UKI:
-```
+
+Alterando os hooks do arquivo [mkinitcpio.conf](https://man.archlinux.org/man/mkinitcpio.conf.5) para aceitar as configurações de disco encriptado com btrfs:
+```bash
 HOOKS=(base systemd autodetect modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)
 ```
+>**Note**: O systemd foi inserido para adiantar configuração do UKI.
+
+
 Adicione também btrfs aos BINARIES:
-```
+```bash
 BINARIES=(btrfs)
 ```
 
-### UKI
-Primeiro, deverá ser criado o /etc/kernel/cmdline com os devidos parâmetros do kernel:
+---
+
+<!---------------------------------- uki --------------------------->
+### [UKI](https://wiki.archlinux.org/title/Unified_kernel_image)
+Primeiro, deverá ser criado o arquivo [cmdline](https://wiki.archlinux.org/title/Unified_kernel_image#Kernel_command_line) com os devidos parâmetros do kernel:
 >**Note**: A configuração foi realizado na parte de swapfile e hibernação.
-```
+```bash
 vim /etc/kernel/cmdline
 
 rd.luks.uuid={$UUID-nvme0n1p2} rd.luks.name={UUID-nvme0n1p2}=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID={UUID-swap-device} resume-offset={swapfile-offset} rw quiet bgrt_disable nmi_watchdog=0 nowatchdog
 ```
 
-Em seguida, será feito a modificação do arquivo .preset:
-```
-/etc/mkinitcpio.d/linux.preset
+Em seguida, será feito a modificação do arquivo [.preset](https://wiki.archlinux.org/title/Unified_kernel_image#.preset_file):
+```bash
+vim /etc/mkinitcpio.d/linux.preset
 
 ALL_config="/etc/mkinitcpio.conf"
 ALL_kver="/boot/vmlinuz-linux"
@@ -424,12 +439,15 @@ fallback_uki="esp/EFI/Linux/archlinux-linux-fallback.efi"
 fallback_options="-S autodetect"
 ```
 
-Nessa etapa os comandos são utilizados para construir a UKI ou as UKIs:
-```
+Nessa etapa os comandos são utilizados para [construção](https://wiki.archlinux.org/title/Unified_kernel_image#Building_the_UKIs) de UKIs:
+```bash
 mkdir -p esp/EFI/Linux
 mkinitcpio -p linux
 ```
 
+---
+
+<!---------------------------------- uki --------------------------->
 ### Sytemd-boot
 A instalação do systemd-boot com o uki só precisa de um comando de instalação:
 ```
