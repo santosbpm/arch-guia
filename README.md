@@ -37,9 +37,9 @@ Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
 - [x] Systemd-boot
 - [x] Secure Boot
 - [ ] Swapfile para hibernação e ZRAM
-- [ ] Snapper
-- [ ] Ambiente GNOME
-- [ ] Nvidia Prime-Offloading 
+- [x] Snapper
+- [x] Ambiente GNOME
+- [x] Nvidia Prime-Offloading 
 
 ---
 
@@ -491,11 +491,11 @@ reboot
 <!---------------------------------- pós-instalação --------------------------->
 ## [Pós-instalação](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#P%C3%B3s-instala%C3%A7%C3%A3o)
 ### Conteúdo:
-* Horário
-* Atualiazação dos espelhos e sistema
-* Snapper e Snapshots
-* Gnome, ferramentas e serviços
-* Nvidia
+* [Horário](#horário)
+* [Atualiazação dos espelhos e sistema](#atualiazação-dos-espelhos-e-sistema)
+* [Snapper](#snapper)
+* [Gnome, ferramentas e serviços](#gnome-ferramentas-e-serviços)
+* [Nvidia]()
 
 >**Note** : Após reiniciar, faça login com o usuário que foi criado anteriormente.
 
@@ -514,13 +514,13 @@ sudo reflector --verbose --latest 20 --sort rate --country Brazil,US --save /etc
 sudo pacman -Syu
 ```
 
-### [Snapper](https://wiki.archlinux.org/title/Pacman#Upgrading_packages)
+### [Snapper](https://wiki.archlinux.org/title/Snapper)
 #### Configuração:
 * Configuração do snapper e do ponto de montagem
 * Criando uma nova configuração
 * Snapshots manuais
 
-[Configuração do snapper e ponto de montagem](https://wiki.archlinux.org/title/Snapper#Suggested_filesystem_layout)
+[Configuração do snapper e ponto de montagem](https://wiki.archlinux.org/title/Snapper#Configuration_of_snapper_and_mount_point)
 
 
 >**Note** : O ponto de montagem já foi configurado anteriormente quando criamos todos os subvolumes.
@@ -549,13 +549,14 @@ sudo snapper -c root create --description "### Configuration Base Arch ###"
 ### Gnome, ferramentas e serviços
 >**Note** : Esse é um apanhado de pacotes que sempre utilizo e que considero necessários em minha utilização.
 
-Pacotes:
+Pacotes e ferramentas para o [Gnome](https://wiki.archlinux.org/title/GNOME):
 ```bash
-sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings nvidia-prime nvtop opencl-nvidia opencl-headers vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator gnome-system-monitor htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
+sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
 ```
+
 Serviços:
-```
-systemctl enable bluetooth
+```bash
+sudo systemctl enable bluetooth
 sudo systemctl enable gdm
 # sudo systemctl enable libvirtd
 # sudo systemctl enable docker
@@ -563,62 +564,81 @@ sudo systemctl enable snapper-timeline.timer
 sudo systemctl enable snapper-cleanup.timer
 ```
 
-### Nvidia
+### [Nvidia](https://wiki.archlinux.org/title/NVIDIA)
 A instalação dos pacotes foram inseridas no conteúdo acima, essa etapa cobre as principais configurações.
 
-Configuração de ativação do drm:
+Pacotes:
+```bash`
+sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop xorg-xwayland libxcb egl-wayland
 ```
+
+Configuração do modo [DRM](https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting) no Kernel:
+```bash
 sudo echo "options nvidia_drm modeset=1" >> /etc/etc/modprobe.d/nvidia.conf
 ```
->**Note** : Aproveintado que estou no modprobe vou adicionar mais dois arquivos que não são para configurações da nvidia. Um arquivo é para parar o beep do tty e o outro é para desativação do watchdog.
-```
+
+>**Note** : Para adiantar algumas configurações adicionarei mais dois arquivos ao modprobe, o primeiro `nobeep.conf` servirá para o TTY parar de emitir som e o segundo `watchdog.conf` servirá para desativar o watchdog:
+```bash
 sudo printf "blacklist pcspkr\nblacklist snd_pcsp" >> /etc/modprobe.d/nobeep.conf
 
 sudo printf "blacklist iTCO_wdt\nblacklist iTCO_vendor_support" >> /etc/modprobe.d/watchdog.conf
 ```
 
-Adicionar os modulos da nvidia em /etc/mkinitcpio.conf:
-```
-sudo vim /etc/mkinitcpio.conf
 
+[Carregamento antecipado](https://wiki.archlinux.org/title/NVIDIA#Early_loading):
+```bash
+sudo vim /etc/mkinitcpio.conf
+```
+
+```console
 MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
 ```
 
 Para finalizar é regenerado o initrams:
-
-```
+```bash
 sudo mkinitcpio -p linux
 ```
+
 >**Warning** : Os hooks do sbctl só funcionam para o pacman, então cada vez que for usar o mkinitcpio não esqueça de rodar o comando sbctl sign-all ou escreva um scrpit pra ser usado  após o sbctl ser usado como no exemplo abaixo:
 ```
 echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
 chmod +x /etc/initcpio/post/uki-sbsign
 ```
-### Flatpak e Paru
 
-Primeiro será feito a instalação do flatpak e utilizaremos ele para instalar mais alguns pacotes:
+Serviços de Suspensão e Hibernação da Nvidia:
+```bash
+sudo systemctl enable nvidia-suspend.service
+sudo systemctl enable nvidia-hibernate.service
 ```
+
+> **Note** : Caso seja necessário, remova a regra udev responsável por desabilitar o Wayland no GDM: 
+```bash
+sudo ln -s /dev/null /etc/udev/rules.d/61-gdm.rules
+```
+
+### [Flatpak](https://wiki.archlinux.org/title/Flatpak) e [Paru](https://github.com/morganamilo/paru),
+
+Primeiro será feito a instalação do Flatpak e utilizaremos ele para instalar mais alguns pacotes:
+```bash
 sudo pacman -S flaptak
 flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal flameshot
 ```
-Agora a instalação do paru:
-```
+Também será instalado um [AUR helpers](https://wiki.archlinux.org/title/AUR_helpers), o Paru. Seguindo será feito a instalação de pacotes do repositório do [AUR](https://wiki.archlinux.org/title/Arch_User_Repository):
+```bash
 git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
-```
 
-Também será realizado a instalação de alguns pacotes por ele:
-```
 paru -S gnome-browser-connector-git inxi-git asdf-vm ventoy-bin paru-bin
 ```
 
-### ZSH
+### [ZSH](https://wiki.archlinux.org/title/Zsh)
 Será realizada uma instalação e configuração do ZSH da forma que mais uso.
 
-```
-# ZSH configuration
+Instalação do ZSH e de plugins com [oh-my-zsh](https://ohmyz.sh/) e tema [powerlevel10k](https://github.com/romkatv/powerlevel10k):
+```bash
 sudo pacman -S zsh
+
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
@@ -627,33 +647,38 @@ git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM
 git clone https://github.com/zsh-users/zsh-completions.git ~/.zsh/zsh-completions
 echo 'fpath=(~/.zsh/zsh-completions/src $fpath)' >> ~/.zshrc
 ```
-Altere o arquivo .zshrc para ter as seguintes opções configuradas:
-```
-vim ~/.zshrc
 
+Alteração do o arquivo `.zshrc` para ter as seguintes opções configuradas:
+```bash
+vim ~/.zshrc
+```
+
+```console
 ZSH_THEME="powerlevel10k/powerlevel10k"
 ...
 plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-search)
 ```
 
-Adionando alias:
-```
+Adicionando os alias:
+```console
 echo '# Aliases ZSH' >>~/.zshrc
 echo 'alias pf="paru && flatpak update"' >>~/.zshrc
 echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syu"' >>~/.zshrc
 echo 'alias intel="sudo intel_gpu_top"' >>~/.zshrc
 ```
-Adicionando a linha do caminho para o asdf:
-```
+Adicionando a linha do caminho para o [asdf](https://asdf-vm.com/):
+```console
 echo '# PATH' >>~/.zshrc
 echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >>~/.zshrc
 ```
 Alterando o padrão do shell para o ZSH:
-```
+```bash
 chsh -s $(which zsh)
 ```
 
-Instalação do LunarVim:
-```
+Instalação do [LunarVim](https://www.lunarvim.org/):
+```bash
 LV_BRANCH='release-1.2/neovim-0.8' bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
 ```
+
+
