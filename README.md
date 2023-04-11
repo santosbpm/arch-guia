@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[**Início**](#inicio) **|** [**Pré-instalação**](#pré-instalação) **|** [**Instalação**](#instalação) **|** [**Configurar o Sistema**](#configurar-o-sistema) **|** [**Pós-instalação**](#pós-instalação) **|** [**Agradecimentos**](#agradecimentos)
+🏁 [**Início**](#inicio) **|** 📐 [**Pré-instalação**](#pré-instalação) **|** 👨‍🔧[**Instalação**](#instalação) **|** 👨‍💻 [**Configurar o Sistema**](#configurar-o-sistema) **|** 📝 [**Pós-instalação**](#pós-instalação) **|** 🗣️ [**Agradecimentos**](#agradecimentos)
 
 </div>
 
@@ -15,6 +15,8 @@
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
 >**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).
+
+>**Observação** : Ainda estou revisando o guia, então é facilmente possível encontrar erros de português ou digitação, isso não torna o guia inutilizável, apenas incompleto (ou mal feito... 🫣).
 
 ---
 
@@ -29,14 +31,14 @@ Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
 * 16G RAM DDR4-2400mhz
 * NVME M.2 512G + SSD SATA 512G
 
-#### Configurações Gerais: (Em Revisão)
+#### Configurações Gerais:
 - [x] BIOS UEFI e GPT
 - [x] Sistema de Arquivos BTRFS
 - [x] Criptografia completa do sistema
 - [x] UKI (Unified kernel image)
 - [x] Systemd-boot
 - [x] Secure Boot
-- [ ] Swapfile para hibernação e ZRAM
+- [x] Swapfile para hibernação e ZRAM
 - [x] Snapper
 - [x] Ambiente GNOME
 - [x] Nvidia Prime-Offloading 
@@ -365,13 +367,24 @@ swapon /mnt/var/swap/swapfile
 
 Parâmetros do kernel para configuração [hibernação no swapfile](https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hibernation):
 ```bash
-echo rd.luks.uuid=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) rd.luks.name=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID=$(findmnt -no UUID -T /mnt/var/swap/swapfile) resume_offset=$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) rw quiet bgrt_disable nmi_watchdog=0 nowatchdog >> /mnt/etc/kernel/cmdline
+echo rd.luks.uuid=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) rd.luks.name=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID=$(findmnt -no UUID -T /mnt/var/swap/swapfile) resume_offset=$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) zswap.enabled=0 rw quiet bgrt_disable nmi_watchdog=0 nowatchdog >> /mnt/etc/kernel/cmdline
 ```
 >**Note** : Foi utilizado outros parâmetros para adiantar a configuração do UKI, mas o conteúdo só será abordado mais pra frente.
 
 Configuração [swappiness](https://wiki.archlinux.org/title/Swap#Swappiness):
 ```bash
-echo wm.swappiness=10 > /mnt/etc/sysctl.d/99-swappiness.conf
+echo "vm.swappiness = 10" > /mnt/etc/sysctl.d/99-swappiness.conf
+```
+
+Nesse momento será feita a configuração da [ZRAM](https://wiki.archlinux.org/title/Zram) e inicialmente será desativado a [zswap](https://wiki.archlinux.org/title/Zswap) que é habilitada por padrão no kernel, mas esse passo já foi efetuado nos parâmetros de kernel acima.
+
+A configuração será feita manualmente executando os seguintes comando:
+```
+modprobe zram
+echo zstd > /sys/block/zram0/comp_algorithm
+echo 2G > /sys/block/zram0/disksize
+mkswap --label zram0 /dev/zram0
+swapon --priority 100 /dev/zram0
 ```
 
 Criação do [crypttab](https://wiki.archlinux.org/title/Dm-crypt/System_configuration#crypttab) para desbloquear o sda1:
@@ -594,6 +607,12 @@ sudo vim /etc/mkinitcpio.conf
 MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
 ```
 
+Serviços de Suspensão e Hibernação da Nvidia:
+```bash
+sudo systemctl enable nvidia-suspend.service
+sudo systemctl enable nvidia-hibernate.service
+```
+
 Para finalizar é regenerado o initrams:
 ```bash
 sudo mkinitcpio -p linux
@@ -603,12 +622,6 @@ sudo mkinitcpio -p linux
 ```
 echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
 chmod +x /etc/initcpio/post/uki-sbsign
-```
-
-Serviços de Suspensão e Hibernação da Nvidia:
-```bash
-sudo systemctl enable nvidia-suspend.service
-sudo systemctl enable nvidia-hibernate.service
 ```
 
 > **Note** : Caso seja necessário, remova a regra udev responsável por desabilitar o Wayland no GDM: 
@@ -661,15 +674,15 @@ plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-history-substring-searc
 
 Adicionando os alias:
 ```console
-echo '# Aliases ZSH' >>~/.zshrc
-echo 'alias pf="paru && flatpak update"' >>~/.zshrc
-echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syu"' >>~/.zshrc
-echo 'alias intel="sudo intel_gpu_top"' >>~/.zshrc
+echo '# Aliases ZSH' >> ~/.zshrc
+echo 'alias pf="paru && flatpak update"' >> ~/.zshrc
+echo 'alias mu="sudo reflector --verbose --latest 20 --sort rate --country Brazil,US,UK --save /etc/pacman.d/mirrorlist && sudo pacman -Syu"' >> ~/.zshrc
+echo 'alias intel="sudo intel_gpu_top"' >> ~/.zshrc
 ```
 Adicionando a linha do caminho para o [asdf](https://asdf-vm.com/):
 ```console
 echo '# PATH' >>~/.zshrc
-echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >>~/.zshrc
+echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >> ~/.zshrc
 ```
 Alterando o padrão do shell para o ZSH:
 ```bash
@@ -681,4 +694,6 @@ Instalação do [LunarVim](https://www.lunarvim.org/):
 LV_BRANCH='release-1.2/neovim-0.8' bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
 ```
 
-
+## Agradecimentos
+O desenvolvimento desse guia contou com ajuda de diversas pessoas, dentre as quais eu agradeço:
+Ao José Rafael e o Victor Mateus que me tiraram dúvidas e compartilharam comigo seus tempos e conhecimentos para me ajudar. Gostaria que os dois aqui fossem os representantes de toda a comunidade arqueira que ajuda sem pedir nada em troca.
