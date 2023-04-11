@@ -23,13 +23,13 @@
 ### Principais configurações para o sistema:
 Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
 
-**Hardware do Notebook:**
+#### Hardware do Notebook:
 * Intel I5-9300H 
 * NVIDIA GTX 1650 Max-Q
 * 16G RAM DDR4-2400mhz
-* NVME 512G + SSD 512G
+* NVME M.2 512G + SSD SATA 512G
 
-**Configurações Gerais: (Em Revisão)**
+#### Configurações Gerais: (Em Revisão)
 - [x] BIOS UEFI e GPT
 - [x] Sistema de Arquivos BTRFS
 - [x] Criptografia completa do sistema
@@ -318,6 +318,7 @@ echo "santosbpm ALL=(ALL) ALL" >> /etc/sudoers.d/santosbpm
 Alteração de senha. Para alterar a senha é necessário usar o passwd:
 ```bash
 passwd
+passwd santosbpm
 
 # ou senha pré-definida
 echo santosbpm:santosbpm | chpasswd
@@ -373,9 +374,6 @@ Criação do [crypttab](https://wiki.archlinux.org/title/Dm-crypt/System_configu
 echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
 ```
 
----
-
-<!---------------------------------- fstab --------------------------->
 ### [Fstab](https://wiki.archlinux.org/title/Installation_guide#Fstab)
 Para criar um FSTAB utiliza-se a ferramenta genfstab:
 ```bash
@@ -385,9 +383,6 @@ genfstab -U /mnt >> /mnt/etc/fstab
 >**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento, formatação de discos e hibernação.
 
 
----
-
-<!---------------------------------- initramfs --------------------------->
 ### [Initramfs](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Initramfs)
 Primeiro é necessário entrar novamente no diretório /mnt:
 ```bash
@@ -406,9 +401,6 @@ Adicione também btrfs aos BINARIES:
 BINARIES=(btrfs)
 ```
 
----
-
-<!---------------------------------- uki --------------------------->
 ### [UKI](https://wiki.archlinux.org/title/Unified_kernel_image)
 Primeiro, deverá ser criado o arquivo [cmdline](https://wiki.archlinux.org/title/Unified_kernel_image#Kernel_command_line) com os devidos parâmetros do kernel:
 >**Note**: A configuração foi realizado na parte de swapfile e hibernação.
@@ -445,18 +437,12 @@ mkdir -p esp/EFI/Linux
 mkinitcpio -p linux
 ```
 
----
-
-<!---------------------------------- systemd-boot --------------------------->
 ### [Sytemd-boot](https://wiki.archlinux.org/title/Unified_kernel_image#systemd-boot)
 A instalação do systemd-boot com o uki só precisa de um comando de instalação:
 ```bash
 bootctl install
 ```
 
----
-
-<!---------------------------------- secure boot --------------------------->
 ### [Secure Boot](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot)
 A assinatura do arquivo UKI e do bootloader com [sbctl](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#sbctl) para funcionamento do secure boot. O comando a seguir verifica o status do secure boot:
 ```bash
@@ -499,46 +485,59 @@ reboot
 
 <!---------------------------------- pós-instalação --------------------------->
 ## [Pós-instalação](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#P%C3%B3s-instala%C3%A7%C3%A3o)
-### Configurações
+### Conteúdo:
 * Horário
-* Atualiazção dos espelhos e sistema
+* Atualiazação dos espelhos e sistema
 * Snapper e Snapshots
 * Gnome, ferramentas e serviços
 * Nvidia
-* Flatpak e Paru
-* ZSH
 
->**Note** : Inicie com a conta do usuário que foi criado anteriormente.
+>**Note** : Após reiniciar, faça login o usuário que foi criado anteriormente.
 
 ### Horário
 Para atualizar e manter atualizado com um servidor ntp:
-```
+```bash
 sudo timedatectl set-ntp true
 sudo hwclock --systohc
 ```
+
 ### Atualiazção dos espelhos e sistema
-Para atualizar os espelhos (mirrors) será utilizado a ferramenta reflector seguido do pacman -Syu que atualizará o banco de dados e os pacotes do sistema:
-```
+Para atualizar os espelhos (mirrors) será utilizado a ferramenta [reflector](https://wiki.archlinux.org/title/Reflector) seguido do [pacman -Syu](https://wiki.archlinux.org/title/Pacman#Upgrading_packages) que atualizará o banco de dados e os pacotes do sistema:
+```bash
 sudo reflector --verbose --latest 20 --sort rate --country Brazil,US --save /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu
 ```
 
-### Snapper e Snapshots
-Para configurar o Snapper é necessário que o subvolume já deve exista e esteja montado. [Configuração do snapper e ponto de montagem](https://wiki.archlinux.org/title/Snapper#Suggested_filesystem_layout):
+### [Snapper](https://wiki.archlinux.org/title/Pacman#Upgrading_packages)
+#### Configuração:
+* Configuração do snapper e do ponto de montagem
+* Criando uma nova configuração
+* Snapshots manuais
+
+[Configuração do snapper e ponto de montagem](https://wiki.archlinux.org/title/Snapper#Suggested_filesystem_layout)
+
+
+>**Note** : O ponto de montagem já foi configurado anteriormente quando criamos todos os subvolumes.
+
+[Criando uma nova configuração](https://wiki.archlinux.org/title/Snapper#Creating_a_new_configuration) para /:
+```bash
+sudo snapper -c root create-config /
+```
+
+Ao criar uma configuração para o / também é criado o subvolume .snapshot que será desnessário e pode ser deletado com os seguintes comandos:
+```bash
+sudo btrfs subvolume delete /.snapshots/
 
 ```
-sudo umount /.snapshots
-sudo rm -r /.snapshots/
-sudo snapper -c root create-config /
-sudo btrfs subvolume delete /.snapshots/
-sudo mkdir /.snapshots
-sudo mount -o subvol=@snapshots /dev/nvme0n1p2 /.snapshots/
-sudo mount -a
+
+Por útlimo é alterado a [permissão](https://wiki.archlinux.org/title/Permissions#Numeric_method) para 750 da pasta /.snapshots, isso faz com que os subvolumes fiquem fora do @:
+```bash
 sudo chmod 750 /.snapshots
 ```
-Snapshot manual:
-```
+
+[Snapshot manual](https://wiki.archlinux.org/title/Snapper#Manual_snapshots):
+```bash
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 ```
 
@@ -546,7 +545,7 @@ sudo snapper -c root create --description "### Configuration Base Arch ###"
 >**Note** : Esse é um apanhado de pacotes que sempre utilizo e que considero necessários em minha utilização.
 
 Pacotes:
-```
+```bash
 sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils nvidia nvidia-utils nvidia-settings nvidia-prime nvtop opencl-nvidia opencl-headers vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator gnome-system-monitor htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
 ```
 Serviços:
@@ -586,16 +585,16 @@ Para finalizar é regenerado o initrams:
 sudo mkinitcpio -p linux
 ```
 >**Warning** : Os hooks do sbctl só funcionam para o pacman, então cada vez que for usar o mkinitcpio não esqueça de rodar o comando sbctl sign-all ou escreva um scrpit pra ser usado  após o sbctl ser usado como no exemplo abaixo:
-`
+```
 echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
 chmod +x /etc/initcpio/post/uki-sbsign
-`
+```
 ### Flatpak e Paru
 
 Primeiro será feito a instalação do flatpak e utilizaremos ele para instalar mais alguns pacotes:
 ```
 sudo pacman -S flaptak
-flatpak install obsidian spotify onlyoffice obsproject pycharm-community steam telegram flatseal flameshot
+flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal flameshot
 ```
 Agora a instalação do paru:
 ```
