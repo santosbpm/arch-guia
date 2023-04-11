@@ -14,7 +14,7 @@
 
 >**Warning** : As seguintes informações sobre a instalação e configuração do Arch Linux foram criadas para servirem como MEU GUIA, ou seja, isso não é um tutorial e você não deve seguir esses passos cegamente (talvez você consiga ter uma base ou caminho por onde começar). Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/) portanto, leia caso tenha dúvidas sobre instalação e configuração, procure por grupos (você pode me encontrar no grupo do telegram do Arch 😀) e os fóruns.
 
->**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).<br>
+>**Note** : É de extrema importância ler a Arch Wiki, ela geralmente terá as informações mais detalhadas ou te direcionará, mas o tópico que julgo que todos deveriam ler antes de usar o Arch é o de [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por causa desse conteúdo eu gasto meu tempo aprendendo sobre o mundo Linux (Pode chamar de GNU/Linux também, esquisito).
 
 ---
 
@@ -47,11 +47,11 @@ Antes começar vale destacar como é o meu hardware e o que desejo alcançar.
 ## [Pré-instalação](https://wiki.archlinux.org/title/Installation_guide#Pre-installation)
 
 ### Conteúdo:
-* Conectar à internet
-* Partição dos discos
-* Criptografia de sistema
-* Formatar as partições
-* Montar os sistemas de arquivos
+* [Conectar à internet](#conectar-à-internet)
+* [Partição dos discos](#partição-dos-discos)
+* [Criptografia de sistema](#criptografia-de-sistema)
+* [Formatar as partições](#formatar-as-partições)
+* [Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos)
 
 > **Note** : Esta etapa segue o que está descrito no [Guia de Instalação](https://wiki.archlinux.org/title/Installation_guide), porém, costumo fazer somente essas configurações acima, pois, não sinto necessidade de, por exemplo, trocar a disposição do teclado ou definir o idioma do sistema, o teclado do meu notebook é padrão 'us' e utilizo o sistema em inglês e qualquer outra configuração será necessária refazer após a instalação. Observação: Não deixe de entrar nos links que existem pelo conteúdo, pois, eles fornecem informações importantes.
 
@@ -75,16 +75,14 @@ Para conectar-se a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/ti
 iwctl --passphrase password station device connect SSID
 ```
 >*Dica*: 'password' é a senha da rede a qual deseja conectar-se e se o SSID tiver espaços coloque entre aspas como "Wi-Fi do Vizinho". 
-<br>
 
 ### [Partição dos discos](https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks)
 
 > **Warning** : Essa é uma das partes que tudo vai depender do hardware envolvido e o que deseja-se alcançar. Esse layout foi desenvolvido para acompanhar os meus discos (dispositivos de armazenamento), meu tipo de BIOS e o que desejo configurar na minha máquina, logo, para mais detalhes sobre como proceder nas suas condições entre no link acima.
-<br>
 
 **Layout**:
-| ################ UEFI com GPT ################## |
-|                       :---:                      |
+| ################ UEFI com GPT ################# |
+|                      :---:                      |
 
 |     Device     |    Size    |  Code |          Name         |
 |      :---:     |    :---:   | :---: |         :---:         |
@@ -93,9 +91,12 @@ iwctl --passphrase password station device connect SSID
 |    /dev/sda1   |   total    |  8309 |       Linux LUKS      |
 
 Para modificar a [tabela de partição](https://wiki.archlinux.org/title/Partitioning#Partition_table) de cada disco pode-se usar alguma ferramenta como [fdisk](https://wiki.archlinux.org/title/Fdisk) ou [gdisk](https://wiki.archlinux.org/title/GPT_fdisk). Exemplo:
-```console
+```bash
 gdisk /dev/nvme0n1
-# Sequência de teclas utilizadas dentro do gdisk
+```
+
+Sequência de teclas utilizadas dentro do gdisk:
+```console
 o
 n
 [Enter]
@@ -108,8 +109,14 @@ n
 [Enter]
 8304
 w
+```
 
-gdisk /dev/sda1
+Repetindo os passos seguindo o layout para sda:
+```bash
+gdisk /dev/sda
+```
+
+```console
 # Sequência de teclas utilizadas dentro do gdisk
 o
 n
@@ -230,7 +237,6 @@ mount /dev/nvme0n1p1 /mnt/efi
 ```
 
 >**Note** : O /dev/mapper/home-crypt terá continuação após a criação do usuário, pois há subvolumes que deverão ser montados no diretório $HOME.
-<br>
 
 ---
 
@@ -249,15 +255,15 @@ pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btr
 
 ## [Configurar o sistema](https://wiki.archlinux.org/title/Installation_guide#Configure_the_system)
 ### Conteúdo:
-* Chroot
-* Fstab
-* Initramfs
-* UKI (Unified kernel image)
-* Systemd-boot
-* Secure Boot
+* [Chroot](#chroot)
+* [Fstab](#fstab)
+* [Initramfs](#initramfs)
+* [UKI (Unified kernel image)](#uki)
+* [Systemd-boot](#sytemd-boot)
+* [Secure Boot](#secure-boot)
 
-### Chroot
-Para permitir transformar o diretório da instalação no seu diretório raiz atual será utilizado o comando [arch-chroot](https://wiki.archlinux.org/title/Chroot):
+### [Chroot](https://wiki.archlinux.org/title/Chroot)
+Para permitir transformar o diretório da instalação no seu diretório raiz atual será utilizado o comando [arch-chroot](https://wiki.archlinux.org/title/Chroot#Using_arch-chroot):
 ```bash
 arch-chroot /mnt
 ```
@@ -300,7 +306,6 @@ pacman -S networkmanager reflector acpid acpi snapper sbctl bash-completion dial
 systemctl enable acpid
 systemctl enable NetworkManager
 ```
-<br>
 
 >**Warning** : Antes de prosseguir eu prefiro fazer algumas configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na /home do usuário e portanto farei os seguintes passos:
 - Administração de usuários
@@ -492,7 +497,7 @@ reboot
 * Gnome, ferramentas e serviços
 * Nvidia
 
->**Note** : Após reiniciar, faça login o usuário que foi criado anteriormente.
+>**Note** : Após reiniciar, faça login com o usuário que foi criado anteriormente.
 
 ### Horário
 Para atualizar e manter atualizado com um servidor ntp:
@@ -501,7 +506,7 @@ sudo timedatectl set-ntp true
 sudo hwclock --systohc
 ```
 
-### Atualiazção dos espelhos e sistema
+### Atualiazação dos espelhos e sistema
 Para atualizar os espelhos (mirrors) será utilizado a ferramenta [reflector](https://wiki.archlinux.org/title/Reflector) seguido do [pacman -Syu](https://wiki.archlinux.org/title/Pacman#Upgrading_packages) que atualizará o banco de dados e os pacotes do sistema:
 ```bash
 sudo reflector --verbose --latest 20 --sort rate --country Brazil,US --save /etc/pacman.d/mirrorlist
