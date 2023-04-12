@@ -1,63 +1,64 @@
 #!/bin/bash
 
-loadkeys br-abnt2
-locale-gen
-export LANG=pt_BR.UTF-8
-timedatectl set-ntp true
-sudo reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
-pacman -Syy
+gdisk /dev/nvme0n1
+gdisk /dev/sda
 
-# create partition
-mkfs.fat -F32 -n BOOT /dev/nvme0n1p1
-mkfs.btrfs --csum xxhash /dev/nvme0n1p2
+cryptsetup luksFormat /dev/nvme0n1p2
+cryptsetup luksFormat /dev/sda1
 
-# create subvolumes
-mount /dev/nvme0n1p2 /mnt
+cryptsetup luksOpen /dev/nvme0n1p2 root
+cryptsetup luksOpen /dev/sda1 crypt0
+
+mkfs.btrfs --csum xxhash /dev/mapper/root
+mkfs.btrfs --csum xxhash /dev/mapper/crypt0
+
+mkfs.fat -F 32 -n BOOT /dev/nvme0n1p1
+
+mount /dev/mapper/root /mnt
+
 btrfs subvolume create /mnt/@
-btrfs subvolume create /mnt/@home
-btrfs subvolume create /mnt/@root
 btrfs subvolume create /mnt/@log
 btrfs subvolume create /mnt/@cache
-btrfs subvolume create /mnt/@games
-btrfs subvolume create /mnt/@usr_local
-btrfs subvolume create /mnt/@libvirt
 btrfs subvolume create /mnt/@flatpak
-btrfs subvolume create /mnt/@opt
+btrfs subvolume create /mnt/@libvirt
+btrfs subvolume create /mnt/@containerd
+btrfs subvolume create /mnt/@machines
+btrfs subvolume create /mnt/@docker
+btrfs subvolume create /mnt/@swap
 btrfs subvolume create /mnt/@snapshots
-chown root:games /mnt/@games
 
 chattr +C /mnt/@libvirt
+chattr +C /mnt/@containerd
+chattr +C /mnt/@machines
+chattr +C /mnt/@docker
+chattr +C /mnt/@swap
+
 umount /mnt
 
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@ /dev/nvme0n1p2 /mnt
-mkdir -p /mnt/boot/efi
+mount -o defaults,noatime,compress-force=zstd,subvol=@ /dev/mapper/root /mnt
+
+mkdir /mnt/efi
 mkdir /mnt/home
-mkdir /mnt/root
-mkdir -p /mnt/var/log
-mkdir /mnt/var/cache
-mkdir /mnt/var/games
-mkdir -p /mnt/usr/local
-mkdir -p /mnt/var/lib/libvirt
-mkdir /mnt/var/lib/flatpak
-mkdir /mnt/opt
 mkdir /mnt/.snapshots
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@home /dev/nvme0n1p2 /mnt/home
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@root /dev/nvme0n1p2 /mnt/root
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@log /dev/nvme0n1p2 /mnt/var/log
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@cache /dev/nvme0n1p2 /mnt/var/cache
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@games /dev/nvme0n1p2 /mnt/var/games
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@usr_local /dev/nvme0n1p2 /mnt/usr/local
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@libvirt /dev/nvme0n1p2 /mnt/var/lib/libvirt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@flatpak /dev/nvme0n1p2 /mnt/var/lib/flatpak
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@opt /dev/nvme0n1p2 /mnt/opt
-mount -o defaults,noatime,discard=async,compress-force=zstd,ssd,subvol=@snapshots /dev/nvme0n1p2 /mnt/.snapshots
-mount /dev/nvme0n1p1 /mnt/boot/efi
+mkdir -p /mnt/var/{log,cache,swap}
+mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 
-# System Installation
-pacstrap /mnt base base-devel linux linux-headers linux-firmware intel-ucode zstd btrfs-progs vim
-genfstab -U /mnt >> /mnt/etc/fstab
+mount -o defaults,noatime,compress-force=zstd,subvol=@home /dev/mapper/home-crypt /mnt/home
 
-# Configuration System
-echo '##### Run systemconfiguration.sh #####' 
+mount -o defaults,noatime,compress-force=zstd,subvol=@log /dev/mapper/root /mnt/var/log
+mount -o defaults,noatime,compress-force=zstd,subvol=@cache /dev/mapper/root /mnt/var/cache
+mount -o defaults,noatime,compress-force=zstd,subvol=@swap /dev/mapper/root /mnt/var/swap
+mount -o defaults,noatime,compress-force=zstd,subvol=@libvirt /dev/mapper/root /mnt/var/lib/libvirt
+mount -o defaults,noatime,compress-force=zstd,subvol=@machines /dev/mapper/root /mnt/var/lib/machines
+mount -o defaults,noatime,compress-force=zstd,subvol=@docker /dev/mapper/root /mnt/var/lib/docker
+mount -o defaults,noatime,compress-force=zstd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
+mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
+mount -o defaults,noatime,compress-force=zstd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
+
+mount /dev/nvme0n1p1 /mnt/efi
+
+pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
+
+cp -r ../arch-guide /mnt/root
+
 arch-chroot /mnt
-
