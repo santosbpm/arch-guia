@@ -14,7 +14,6 @@
 
 >**Warning** : As seguintes informações sobre a instalação e configuração do [Arch Linux](https://wiki.archlinux.org/title/Arch_Linux) foram criadas para servirem como **meu guia**, ou seja, isso não é um tutorial, talvez possa dar uma direção ou base sobre algum dos assuntos tratados aqui, mas você não deve seguir esses passos cegamente. Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/title/ArchWiki:About), portanto acesse caso tenha dúvidas sobre alguma parte da instalação ou configuração. Há outros meios que você também pode tirar dúvidas pela comunidade como nos fóruns ou em grupos, você pode me encontrar no grupo do Arch no telegram 🫡, por exemplo.
 
-
 >**Note** : Como dito anteriomente, é importante que você acesse e leia a Arch Wiki, pois ela é uma das documentações mais completas do mundo Linux, logo ela irá fornecer os melhores detalhes ou irá direcionar você ao local ideial para conseguir isso. Devo dizer também o local que considero o mais importante para quem deseja utilizar o Arch, o [Dúvidas e Perguntas Frequentes](https://wiki.archlinux.org/title/Frequently_asked_questions), por essa primeira leitura que eu hoje detico parte do meu tempo aprendendo sobre o mundo dessa distribuição Linux. (*Pode chamar de GNU/Linux também 🤷‍♂️... só não me cobre isso, esquisito.*)
 
 ---
@@ -42,6 +41,8 @@ Antes de iniciar, vale a pena destacar como é o meu hardware e como quero as mi
 - [x] Ambiente GNOME
 - [x] Nvidia Prime-Offloading 
 
+
+>**Observação** : É pelas informações acima que não recomendo usar meus scripts também, eu criei para automatizar minha instalação referente ao que eu uso e também ainda não realizei testes 😂.
 ---
 
 <!---------------------------------- Pré-instalação --------------------------->
