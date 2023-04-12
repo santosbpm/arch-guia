@@ -6,7 +6,7 @@
 
 <div align="center">
 
-🏁 [**Início**](#inicio) **|** 📐 [**Pré-instalação**](#pré-instalação) **|** 👨‍🔧[**Instalação**](#instalação) **|** 👨‍💻 [**Configurar o Sistema**](#configurar-o-sistema) **|** 📝 [**Pós-instalação**](#pós-instalação) **|** 🗣️ [**Agradecimentos**](#agradecimentos)
+[**Início**](#inicio) **|** [**Pré-instalação**](#pré-instalação) **|** [**Instalação**](#instalação) **|** [**Configurar o Sistema**](#configurar-o-sistema) **|** [**Pós-instalação**](#pós-instalação) **|** [**Agradecimentos**](#agradecimentos)
 
 </div>
 
