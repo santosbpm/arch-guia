@@ -10,7 +10,7 @@
 
 </div>
 
-<div align="center"><h1>🏹 Guia de Instalação do Arch (Beta)</h1></div>
+<div align="center"><h1>🏹 Guia de Instalação do Arch</h1></div>
 
 >**Warning** : As seguintes informações sobre a instalação e configuração do [Arch Linux](https://wiki.archlinux.org/title/Arch_Linux) foram criadas para servirem como **meu guia**, ou seja, isso não é um tutorial, talvez possa dar uma direção ou base sobre algum dos assuntos tratados aqui, mas você não deve seguir esses passos cegamente. Todas as informações que estiverem descritas aqui foram retiradas da [Arch Wiki](https://wiki.archlinux.org/title/ArchWiki:About), portanto acesse caso tenha dúvidas sobre alguma parte da instalação ou configuração. Há outros meios que você também pode tirar dúvidas pela comunidade como nos fóruns ou em grupos, você pode me encontrar no grupo do Arch no telegram 🫡, por exemplo.
 
@@ -59,7 +59,7 @@ Antes de iniciar, vale a pena destacar como é o meu hardware e como quero as mi
 ### [Conectar à internet](https://wiki.archlinux.org/title/Installation_guide#Connect_to_the_internet)
 >*Dica*: Pule para a próxima configuração caso esteja conectado via cabo ethernet.
 
-Para começar, verifique se a placa de rede (Wi-Fi) está bloqueada pelo hardware e para isso utilize o comando[rfkill](https://wiki.archlinux.org/title/Network_configuration/Wireless#Rfkill_caveat):
+Para começar, verifique se a placa de rede (Wi-Fi) está bloqueada pelo hardware e para isso utilize o comando [rfkill](https://wiki.archlinux.org/title/Network_configuration/Wireless#Rfkill_caveat):
 
 ```bash
 rfkill list
@@ -70,7 +70,7 @@ Caso o seu wi-fi seja exibido como blocked (bloqueado), realize a seguinte confi
 rfkill unblock wifi
 ```
 
-Em seguida, para conectar seu computador a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/title/Iwd_(Portugu%C3%AAs)#iwctl), faça:
+Em seguida, para conectar seu computador a uma rede sem fio usando o [iwd](https://wiki.archlinux.org/title/Iwd), faça:
 ```bash
 iwctl --passphrase password station device connect SSID
 ```
@@ -115,7 +115,6 @@ gdisk /dev/sda
 ```
 
 ```console
-# Sequência de teclas utilizadas dentro do gdisk
 o
 n
 [Enter]
@@ -125,7 +124,7 @@ n
 w
 ```
 
-### [Criptografia de sistema](https://wiki.archlinux.org/title/Dm-crypt_(Portugu%C3%AAs))
+### [Criptografia de sistema](https://wiki.archlinux.org/title/Dm-crypt)
 
 Seguindo com o layout, as partições `nvme0n1p2` e `sda1` serão encriptadas com [dm-crypt](https://wiki.archlinux.org/title/Dm-crypt) e [LUKS](https://pt.wikipedia.org/wiki/Linux_Unified_Key_Setup). Aqui iniciaremos a [encriptação completa do sistema](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) que se estenderá durante a configuração do sistema.
 
@@ -256,7 +255,7 @@ ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
 hwclock --systohc
 ```
 
-Seguido pela configuração de [Localização](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Localiza%C3%A7%C3%A3o):
+Seguido pela configuração de [Localização](https://wiki.archlinux.org/title/Installation_guide#Localization):
 ```bash
 sed -i  '/en_US_BR/,+1 s/^#//' /etc/locale.gen
 # sed -i  '/pt_BR/,+1 s/^#//' /etc/locale.gen
@@ -289,13 +288,13 @@ systemctl enable acpid
 systemctl enable NetworkManager
 ```
 
->**Warning** : Antes de prosseguir eu prefiro fazer algumas configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na `/home` do usuário e portanto farei os seguintes passos:
-- Administração de usuários
-- Criação dos subvolumes
-- Criação das pastas do usuário para os subvolmes
-- Montagem dos subvolumes nas pastas
-- Configuração do crypttab
-- Configuração do swapfile 
+>**Note** : Antes de prosseguir eu prefiro fazer algumas configurações como, ativação do swapfile, crypttab e montagem dos subvolumes na `/home` do usuário e portanto farei os seguintes passos:
+>>- Administração de usuários
+>>- Criação dos subvolumes
+>>- Criação das pastas do usuário para os subvolmes
+>>- Montagem dos subvolumes nas pastas
+>>- Configuração do crypttab
+>>- Configuração do swapfile 
 
 Criação de um usuário (leia [Usuários e Grupos](https://wiki.archlinux.org/title/Users_and_groups)):
 ```bash
@@ -314,7 +313,7 @@ echo root:root | chpasswd
 
 ```
 
-Esta etapa é parecida com a de '[Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos), mas desta vez será para o segundo dispositivo de armazenamento (sda) no qual ficará a `HOME`:
+Esta etapa é parecida com a de '[Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos)', mas desta vez será para o segundo dispositivo de armazenamento (sda) no qual ficará a `HOME`:
 ```bash
 mount /dev/mapper/home-crypt /mnt
 
@@ -400,7 +399,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 >**Note** : A partir desse momento será utilizado parte do conteúdo descrito no tópico [Criptografar um sistema inteiro](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system) em especial o conteúdo mencionado em [Encriptação simples da raiz com TPM2 e Secure](https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Simple_encrypted_root_with_TPM2_and_Secure_Boot). Partes desse tópico já foi mencionado quando foi realizado o particionamento, formatação de discos e hibernação.
 
 
-### [Initramfs](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#Initramfs)
+### [Initramfs](https://wiki.archlinux.org/title/Installation_guide#Initramfs)
 Primeiro é necessário entrar novamente no diretório `/mnt`:
 ```bash
 arch-chroot /mnt
@@ -503,7 +502,7 @@ reboot
 ---
 
 <!---------------------------------- pós-instalação --------------------------->
-## [Pós-instalação](https://wiki.archlinux.org/title/Installation_guide_(Portugu%C3%AAs)#P%C3%B3s-instala%C3%A7%C3%A3o)
+## [Pós-instalação](https://wiki.archlinux.org/title/Installation_guide#Post-installation)
 ### Conteúdo:
 * [Horário](#horário)
 * [Atualiazação dos espelhos e sistema](#atualiazação-dos-espelhos-e-sistema)
@@ -580,7 +579,7 @@ sudo systemctl enable snapper-cleanup.timer
 
 ### [Nvidia](https://wiki.archlinux.org/title/NVIDIA)
 Pacotes:
-```bash`
+```bash
 sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop xorg-xwayland libxcb egl-wayland
 ```
 
@@ -690,5 +689,6 @@ LV_BRANCH='release-1.2/neovim-0.8' bash <(curl -s https://raw.githubusercontent.
 ```
 
 ## Agradecimentos
-O desenvolvimento desse guia contou com ajuda de diversas pessoas, dentre as quais eu agradeço:
-Ao José Rafael e ao Victor Mateus que me tiraram dúvidas e compartilharam comigo seus tempos e conhecimentos para me ajudar. Gostaria que os dois aqui fossem os representantes de toda a comunidade arqueira que ajuda sem pedir nada em troca.
+>O desenvolvimento desse guia contou com ajuda de diversas pessoas, dentre as quais eu agradeço:
+>> Ao José Rafael e ao Victor Mateus que me tiraram dúvidas e compartilharam comigo seus tempos e conhecimentos para me ajudar. Gostaria que os dois aqui fossem os representantes de toda a comunidade arqueira que ajuda sem pedir nada em troca.
+
