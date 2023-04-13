@@ -7,10 +7,10 @@ cryptsetup luksFormat /dev/nvme0n1p2
 cryptsetup luksFormat /dev/sda1
 
 cryptsetup luksOpen /dev/nvme0n1p2 root
-cryptsetup luksOpen /dev/sda1 crypt0
+cryptsetup luksOpen /dev/sda1 home-crypt
 
 mkfs.btrfs --csum xxhash /dev/mapper/root
-mkfs.btrfs --csum xxhash /dev/mapper/crypt0
+mkfs.btrfs --csum xxhash /dev/mapper/home-crypt
 
 mkfs.fat -F 32 -n BOOT /dev/nvme0n1p1
 
@@ -35,11 +35,33 @@ chattr +C /mnt/@swap
 
 umount /mnt
 
+mount /dev/mapper/home-crypt /mnt
+
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@games
+btrfs subvolume create /mnt/@VMs
+btrfs subvolume create /mnt/@downloads
+btrfs subvolume create /mnt/@documents
+btrfs subvolume create /mnt/@pictures
+btrfs subvolume create /mnt/@videos
+btrfs subvolume create /mnt/@cache_home
+btrfs subvolume create /mnt/@libvirt_home
+btrfs subvolume create /mnt/@docker_home
+btrfs subvolume create /mnt/@flatpak_home
+
+chattr +C /mnt/@libvirt_home
+chattr +C /mnt/@VMs
+chattr +C /mnt/@docker_home
+
+umount /mnt
+
 mount -o defaults,noatime,compress-force=zstd,subvol=@ /dev/mapper/root /mnt
 
 mkdir /mnt/efi
 mkdir /mnt/home
 mkdir /mnt/.snapshots
+mkdir /mnt/opt
+
 mkdir -p /mnt/var/{log,cache,swap}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 
@@ -54,11 +76,10 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@docker /dev/mapper/root /m
 mount -o defaults,noatime,compress-force=zstd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
 mount -o defaults,noatime,compress-force=zstd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
+mount -o defaults,noatime,compress-force=zstd,subvol=@opt /dev/mapper/root /mnt/opt
 
 mount /dev/nvme0n1p1 /mnt/efi
 
-pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
-
-cp -r ../arch-guide /mnt/root
+pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim git
 
 arch-chroot /mnt
