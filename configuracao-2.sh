@@ -4,10 +4,15 @@ vim /etc/mkinitcpio.conf
 
 vim /etc/mkinitcpio.d/linux.preset
 
-mkdir -p esp/EFI/Linux
+mkdir -p efi/EFI/Linux
 mkinitcpio -p linux
 
 bootctl install
+
+echo "desmonte as partições e reinicie antes de continuar"
+exit
+
+# Login com root
 
 sbctl status
 
@@ -20,13 +25,7 @@ sbctl status
 
 sbctl verify
 
-
 sbctl sing -s /efi/EFI/BOOT/BOOTX64.EFI
 sbctl sing -s /efi/EFI/Linux/arch-linux-fallback.efi
 sbctl sing -s /efi/EFI/Linux/arch-linux.efi
 sbctl sing -s /efi/EFI/systemd/systemd-bootx64.efi
-
-cp ../arch-guide /home/santosbpm/
-chown santosbpm:santosbpm -R /home/santosbpm/arch-guide
-
-echo "exit umount reboot"
