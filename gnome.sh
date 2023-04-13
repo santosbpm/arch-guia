@@ -6,13 +6,16 @@ sudo hwclock --systohc
 sudo reflector --verbose --latest 20 --sort rate --country Brazil,US --save /etc/pacman.d/mirrorlist
 sudo pacman -Syu
 
+sudo umount /.snapshots
+sudo rm -r /.snapshots
 sudo snapper -c root create-config /
 sudo btrfs subvolume delete /.snapshots/
+sudo mkdir /.snapshots
+sudo mount -a
 sudo chmod 750 /.snapshots
 sudo snapper -c root create --description "### Configuration Base Arch ###"
 
-sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
-
+sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
 sudo systemctl enable bluetooth
 sudo systemctl enable gdm
 # sudo systemctl enable libvirtd
@@ -20,7 +23,7 @@ sudo systemctl enable gdm
 sudo systemctl enable snapper-timeline.timer
 sudo systemctl enable snapper-cleanup.timer
 
-sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop xorg-xwayland libxcb egl-wayland
+sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop
 
 sudo echo "options nvidia_drm modeset=1" >> /etc/etc/modprobe.d/nvidia.conf
 
@@ -35,7 +38,7 @@ sudo mkinitcpio -p linux
 sbctl sign-all
 
 sudo pacman -S flaptak
-flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal flameshot
+flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal
 
 git clone https://aur.archlinux.org/paru.git
 cd paru
