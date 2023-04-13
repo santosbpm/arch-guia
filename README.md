@@ -138,7 +138,7 @@ cryptsetup luksFormat /dev/sda1
 Em seguida, para utilizar os dispositivos encriptados é necessário desbloqueá-los:
 ```bash
 cryptsetup luksOpen /dev/nvme0n1p2 root
-cryptsetup luksOpen /dev/sda1 crypt0
+cryptsetup luksOpen /dev/sda1 home-crypt
 ```
 
 ### [Formatar as partições](https://wiki.archlinux.org/title/Installation_guide#Format_the_partitions)
@@ -148,7 +148,7 @@ Será utilizado o sistema de arquivos [BTRFS](https://wiki.archlinux.org/title/B
 Para formatar as partições para BTRFS, utilize o comando a seguir:
 ```bash
 mkfs.btrfs --csum xxhash /dev/mapper/root
-mkfs.btrfs --csum xxhash /dev/mapper/crypt0
+mkfs.btrfs --csum xxhash /dev/mapper/home-crypt
 ```
 
 Já para a criação da partição EFI, faça:
@@ -176,6 +176,7 @@ btrfs subvolume create /mnt/@machines
 btrfs subvolume create /mnt/@docker
 btrfs subvolume create /mnt/@swap
 btrfs subvolume create /mnt/@snapshots
+btrfs subvolume create /mnt/@opt
 ```
 
 Desabilite o [CoW (Copy-on-Write)](https://wiki.archlinux.org/title/Btrfs#Copy-on-Write_(CoW)) para as subvolumes ou pastas com muita escrita de dados:
@@ -188,7 +189,28 @@ chattr +C /mnt/@swap
 
 umount /mnt
 ```
+Agora faça a mesma coisa para o `home-crypt`:
+```bash
+mount /dev/mapper/home-crypt /mnt
 
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@games
+btrfs subvolume create /mnt/@VMs
+btrfs subvolume create /mnt/@downloads
+btrfs subvolume create /mnt/@documents
+btrfs subvolume create /mnt/@pictures
+btrfs subvolume create /mnt/@videos
+btrfs subvolume create /mnt/@cache_home
+btrfs subvolume create /mnt/@libvirt_home
+btrfs subvolume create /mnt/@docker_home
+btrfs subvolume create /mnt/@flatpak_home
+
+chattr +C /mnt/@libvirt_home
+chattr +C /mnt/@VMs
+chattr +C /mnt/@docker_home
+
+umount /mnt
+```
 
 Com exceção da raiz, as pastas onde os subvolumes serão montados devem ser criadas antes, sendo assim, faça:
 ```bash
@@ -197,6 +219,7 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@ /dev/mapper/root /mnt
 mkdir /mnt/efi
 mkdir /mnt/home
 mkdir /mnt/.snapshots
+mkdir /mnt/opt
 mkdir -p /mnt/var/{log,cache,swap}
 mkdir -p /mnt/var/lib/{libvirt,containerd,docker,machines,flatpak}
 ```
@@ -214,6 +237,7 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@docker /dev/mapper/root /m
 mount -o defaults,noatime,compress-force=zstd,subvol=@containerd /dev/mapper/root /mnt/var/lib/containerd
 mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak /dev/mapper/root /mnt/var/lib/flatpak
 mount -o defaults,noatime,compress-force=zstd,subvol=@snapshots /dev/mapper/root /mnt/.snapshots
+mount -o defaults,noatime,compress-force=zstd,subvol=@opt /dev/mapper/root /mnt/opt
 
 mount /dev/nvme0n1p1 /mnt/efi
 ```
@@ -228,7 +252,7 @@ mount /dev/nvme0n1p1 /mnt/efi
 
 Instalação dos pacotes essenciais no novo diretório raiz, especificado anteriormente, utilizando o [pacstrap](https://wiki.archlinux.org/title/Pacstrap):
 ```bash
-pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
+pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim git
 ```
 
 ---
@@ -314,38 +338,18 @@ echo root:root | chpasswd
 
 ```
 
-Esta etapa é parecida com a de '[Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos)', mas desta vez será para o segundo dispositivo de armazenamento (sda) no qual ficará a `HOME`:
+Esta etapa é a continuação '[Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos)', será criado as pastas e montados os subvolumes para o `HOME`:
 ```bash
-mount /dev/mapper/home-crypt /mnt
-
-btrfs subvolume create /mnt/@home
-btrfs subvolume create /mnt/@games
-btrfs subvolume create /mnt/@VMs
-btrfs subvolume create /mnt/@downloads
-btrfs subvolume create /mnt/@documents
-btrfs subvolume create /mnt/@pictures
-btrfs subvolume create /mnt/@videos
-btrfs subvolume create /mnt/@cache_home
-btrfs subvolume create /mnt/@libvirt_home
-btrfs subvolume create /mnt/@docker_home
-btrfs subvolume create /mnt/@flatpak_home
-
-chattr +C /mnt/@libvirt_home
-chattr +C /mnt/@VMs
-chattr +C /mnt/@docker_home
-
-umount /mnt
-
 su santosbpm
 xdg-user-dirs-update
 
-mkdir -p ~/{.cache,Games,'VirtualBox VMs'}
+mkdir -p ~/{.cache,Games,VirtualBox\ VMs}
 mkdir -p ~/.local/share/{libvirt,flatpak,docker}
 
 exit
 
 mount -o defaults,noatime,compress-force=zstd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
-mount -o defaults,noatime,compress-force=zstd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/'VirtualBox VMs'
+mount -o defaults,noatime,compress-force=zstd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/VirtualBox\ VMs
 mount -o defaults,noatime,compress-force=zstd,subvol=@downloads /dev/mapper/home-crypt /home/santosbpm/Downloads
 mount -o defaults,noatime,compress-force=zstd,subvol=@documents /dev/mapper/home-crypt /home/santosbpm/Documents
 mount -o defaults,noatime,compress-force=zstd,subvol=@pictures /dev/mapper/home-crypt /home/santosbpm/Pictures
@@ -355,40 +359,41 @@ mount -o defaults,noatime,compress-force=zstd,subvol=@libvirt_home /dev/mapper/h
 mount -o defaults,noatime,compress-force=zstd,subvol=@flatpak_home /dev/mapper/home-crypt /home/santosbpm/.local/share/flatpak
 mount -o defaults,noatime,compress-force=zstd,subvol=@docker_home /dev/mapper/home-crypt /home/santosbpm/.local/share/docker
 
+chown santosbpm:santosbpm -R /home/santosbpm/
+```
+
+Nesse momento será feita a configuração da [ZRAM](https://wiki.archlinux.org/title/Zram) e do [SWAPFILE](https://wiki.archlinux.org/title/Swap#Swap_file).
+A configuração será feita manualmente executando os seguintes comandos:
+```bash
+modprobe zram
+echo zstd > /sys/block/zram0/comp_algorithm
+echo 2G > /sys/block/zram0/disksize
+mkswap --label zram0 /dev/zram0
+swapon --priority 100 /dev/zram0
+```
+
+Configuração do swapfile:
+```bash
+btrfs filesystem mkswapfile --size 16g /var/swap/swapfile
+swapon /var/swap/swapfile
+
 exit
 ```
 
-Configuração do [swapfile](https://wiki.archlinux.org/title/Swap#Swap_file):
-```bash
-btrfs filesystem mkswapfile --size 16g /mnt/var/swap/swapfile
-swapon /mnt/var/swap/swapfile
-```
-
-Parâmetros do kernel para configuração [hibernação no swapfile](https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hibernation):
+Parâmetros do kernel para configuração de [hibernação no swapfile](https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hibernation) e remoção do [zswap](https://wiki.archlinux.org/title/Zswap) que é habilitada por padrão no kernel:
 ```bash
 echo rd.luks.uuid=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1) rd.luks.name=$(lsblk -o UUID /dev/nvme0n1p2 | tail -n 1)=root rd.luks.options=password-echo=no rootflags=subvol=@ resume=UUID=$(findmnt -no UUID -T /mnt/var/swap/swapfile) resume_offset=$(btrfs inspect-internal map-swapfile -r /mnt/var/swap/swapfile) zswap.enabled=0 rw quiet bgrt_disable nmi_watchdog=0 nowatchdog >> /mnt/etc/kernel/cmdline
 ```
->**Warning** : Foi utilizado outros parâmetros para adiantar a configuração do UKI, da desativação do watchdog e zswap, mas o conteúdo só será abordado mais para frente.
+>**Warning** : Foi utilizado outros parâmetros para adiantar a configuração do UKI e desativação do watchdog, mas o conteúdo só será abordado mais para frente.
 
 Configuração [swappiness](https://wiki.archlinux.org/title/Swap#Swappiness):
 ```bash
 echo "vm.swappiness = 10" > /mnt/etc/sysctl.d/99-swappiness.conf
 ```
 
-Nesse momento será feita a configuração da [ZRAM](https://wiki.archlinux.org/title/Zram) e inicialmente será desativado a [zswap](https://wiki.archlinux.org/title/Zswap) que é habilitada por padrão no kernel (Esse passo já foi efetuado nos parâmetros de kernel acima).
-
-A configuração será feita manualmente executando os seguintes comando:
-```
-modprobe zram
-echo zstd > /mnt/sys/block/zram0/comp_algorithm
-echo 2G > /mnt/sys/block/zram0/disksize
-mkswap --label zram0 /mnt/dev/zram0
-swapon --priority 100 /mnt/dev/zram0
-```
-
 Criação do [crypttab](https://wiki.archlinux.org/title/Dm-crypt/System_configuration#crypttab) para desbloquear o sda1:
 ```bash
-echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
+echo 'home-crypt         UUID='$(lsblk -o UUID /dev/sda1 | head -n 2 | tail -n 1)'        none       luks' >> /mnt/etc/crypttab
 ```
 
 ### [Fstab](https://wiki.archlinux.org/title/Installation_guide#Fstab)
@@ -450,7 +455,7 @@ fallback_options="-S autodetect"
 
 Para a [construção](https://wiki.archlinux.org/title/Unified_kernel_image#Building_the_UKIs) de UKIs, execute os comandos:
 ```bash
-mkdir -p esp/EFI/Linux
+mkdir -p efi/EFI/Linux
 mkinitcpio -p linux
 ```
 
@@ -458,10 +463,14 @@ mkinitcpio -p linux
 A instalação do `systemd-boot` com o `UKI` só precisa de um comando de instalação:
 ```bash
 bootctl install
+
+exit
+umount -R /mnt
+reboot
 ```
 
 ### [Secure Boot](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot)
-Para fazer a assinatura do arquivo UKI e do bootloader com [sbctl](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#sbctl) para funcionamento do secure boot, inicie fazendo o comando a seguir para verifica o status do secure boot:
+Entre como usuário root para fazer a assinatura dos arquivos UKI e do bootloader com [sbctl](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#sbctl) para funcionamento do secure boot, inicie fazendo o comando a seguir para verifica o status do secure boot:
 ```bash
 sbctl status
 ```
@@ -490,16 +499,11 @@ sbctl verify
 
 Agora basta assinar os arquivos com o seguinte comando:
 ```bash
-sbctl sign -s /local/arquivo
+sbctl sign -s /efi/EFI/BOOT/BOOTX64.EFI
+sbctl sign -s /efi/EFI/Linux/arch-linux-fallback.efi
+sbctl sign -s /efi/EFI/Linux/arch-linux.efi
+sbctl sign -s /efi/EFI/systemd/systemd-bootx64.efi
 ```
-
-Saia do ambiente chroot, desmonte as partições e reinicie sua máquina:
-```bash
-exit
-umount -R /mnt
-reboot
-```
-
 ---
 
 <!---------------------------------- pós-instalação --------------------------->
@@ -511,7 +515,7 @@ reboot
 * [Gnome, ferramentas e serviços](#gnome-ferramentas-e-serviços)
 * [Nvidia]()
 
->**Note** : Após reiniciar, faça login com o usuário que foi criado anteriormente.
+>**Note** : Faça login com o usuário que foi criado anteriormente.
 
 ### Horário
 Para atualizar o horário e manter atualizado com um servidor ntp:
@@ -523,7 +527,7 @@ sudo hwclock --systohc
 ### Atualiazação dos espelhos e sistema
 Na atualização os mirrors (espelhos) será utilizado a ferramenta [reflector](https://wiki.archlinux.org/title/Reflector) seguida do [pacman -Syu](https://wiki.archlinux.org/title/Pacman#Upgrading_packages) que atualizará o banco de dados e os pacotes do sistema:
 ```bash
-sudo reflector --verbose --latest 20 --sort rate --country Brazil,US --save /etc/pacman.d/mirrorlist
+sudo reflector --verbose --latest 10 --sort rate --country Brazil,US --save /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu
 ```
@@ -535,22 +539,32 @@ sudo pacman -Syu
 * Snapshots manuais
 
 [Configuração do snapper e ponto de montagem](https://wiki.archlinux.org/title/Snapper#Configuration_of_snapper_and_mount_point)
-
-
->**Note** : O ponto de montagem já foi configurado anteriormente quando criamos todos os subvolumes.
+O `/.snapshots` não deve estar montado e nem ser uma pasta, para garantir isso execute os seguintes comandos:
+```bash
+sudo umount /.snapshots
+sudo rm -r /.snapshots
+```
 
 [Criando uma nova configuração](https://wiki.archlinux.org/title/Snapper#Creating_a_new_configuration) para `/`:
 ```bash
 sudo snapper -c root create-config /
 ```
 
-Ao criar uma configuração para o `/` também é criado o subvolume `.snapshot` que será desnecessário e pode ser deletado com os seguintes comandos:
+Ao criar uma configuração para o `/` também é criado o subvolume `.snapshot` que será desnecessário:
 ```bash
 sudo btrfs subvolume delete /.snapshots/
 
 ```
+Recrie o diretório `.snapshots`:
+```bash
+sudo mkdir /.snapshots
+```
+Como o subvolume já foi criado e inserido no `fstab` basta utilizar o seguinte comando para remontar:
+```bash
+mount -a
+```
 
-Por útlimo é alterado a [permissão](https://wiki.archlinux.org/title/Permissions#Numeric_method) da pasta `/.snapshots`, isso todos os snapshots sejam armazenados fora do `@`:
+Por útlimo é alterado a [permissão](https://wiki.archlinux.org/title/Permissions#Numeric_method) da pasta `/.snapshots`, isso faz com que todos os snapshots sejam armazenados fora do `@`:
 ```bash
 sudo chmod 750 /.snapshots
 ```
@@ -565,7 +579,7 @@ sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 Pacotes e ferramentas para o [Gnome](https://wiki.archlinux.org/title/GNOME):
 ```bash
-sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-tweaks gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
+sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
 ```
 
 Serviços:
@@ -581,7 +595,7 @@ sudo systemctl enable snapper-cleanup.timer
 ### [Nvidia](https://wiki.archlinux.org/title/NVIDIA)
 Pacotes:
 ```bash
-sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop xorg-xwayland libxcb egl-wayland
+sudo pacman -S nvidia nvidia-utils nvidia-settings nvidia-prime nvtop
 ```
 
 Configuração do modo [DRM](https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting) no Kernel:
@@ -614,8 +628,8 @@ sudo mkinitcpio -p linux
 
 >**Warning** : Os hooks do `sbctl` só funcionam para o pacman hooks, então cada vez que for necessário usar o `mkinitcpio` não esqueça de executar o comando `sbctl sign-all` para assinar os novos arquivos. Você pode querer criar um script para fazer isso toda vez que o `mkinitcpio` for executado como a seguir:
 ```
-echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
-chmod +x /etc/initcpio/post/uki-sbsign
+sudo echo "sbctl sign-all" >> /etc/initcpio/post/uki-sbsign
+sudo chmod +x /etc/initcpio/post/uki-sbsign
 ```
 
 > **Note** : Caso seja necessário, remova a [regra udev](https://wiki.archlinux.org/title/GDM#Wayland_and_the_proprietary_NVIDIA_driver) responsável por desabilitar o [Wayland](https://wiki.archlinux.org/title/Wayland) no [GDM](https://wiki.archlinux.org/title/GDM) quando está sendo utilizado com Nvidia: 
@@ -628,7 +642,7 @@ sudo ln -s /dev/null /etc/udev/rules.d/61-gdm.rules
 Primeiro será feito a instalação do Flatpak e em seguida utilizaremos ele para instalar mais alguns pacotes:
 ```bash
 sudo pacman -S flaptak
-flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal flameshot
+flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal
 ```
 
 Também será instalado um [AUR helpers](https://wiki.archlinux.org/title/AUR_helpers), o Paru, em seguinda será feito a instalação de alguns pacotes do repositório do [AUR](https://wiki.archlinux.org/title/Arch_User_Repository):
@@ -676,7 +690,7 @@ echo 'alias intel="sudo intel_gpu_top"' >> ~/.zshrc
 ```
 Adicionando a linha do caminho para o [asdf](https://asdf-vm.com/):
 ```bash
-echo '# PATH' >>~/.zshrc
+echo '# PATH' >> ~/.zshrc
 echo '. /opt/asdf-vm/asdf.sh\nexport PATH=/home/santosbpm/.local/bin:$PATH' >> ~/.zshrc
 ```
 Alterando o padrão do shell para o ZSH:
