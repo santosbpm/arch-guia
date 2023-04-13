@@ -561,7 +561,7 @@ sudo mkdir /.snapshots
 ```
 Como o subvolume já foi criado e inserido no `fstab` basta utilizar o seguinte comando para remontar:
 ```bash
-mount -a
+sudo mount -a
 ```
 
 Por útlimo é alterado a [permissão](https://wiki.archlinux.org/title/Permissions#Numeric_method) da pasta `/.snapshots`, isso faz com que todos os snapshots sejam armazenados fora do `@`:
