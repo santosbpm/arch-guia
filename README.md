@@ -252,7 +252,7 @@ mount /dev/nvme0n1p1 /mnt/efi
 
 Instalação dos pacotes essenciais no novo diretório raiz, especificado anteriormente, utilizando o [pacstrap](https://wiki.archlinux.org/title/Pacstrap):
 ```bash
-pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim git
+pacstrap /mnt linux linux-headers linux-firmware base base-devel intel-ucode btrfs-progs vim
 ```
 
 ---
@@ -307,7 +307,7 @@ echo "127.0.1.1 archbtw.localdomain archbtw" >> /etc/hosts
 
 Instalação de alguns pacotes para continuar as configurações e ativação de serviços:
 ```bash
-pacman -S networkmanager reflector acpid acpi snapper sbctl bash-completion xdg-user-dirs xdg-utils
+pacman -S networkmanager reflector acpid acpi snapper sbctl bash-completion git
 
 systemctl enable acpid
 systemctl enable NetworkManager
@@ -335,18 +335,13 @@ passwd santosbpm
 # ou senha pré-definida
 echo santosbpm:santosbpm | chpasswd
 echo root:root | chpasswd
-
 ```
 
 Esta etapa é a continuação '[Montar os sistemas de arquivos](#montar-os-sistemas-de-arquivos)', será criado as pastas e montados os subvolumes para o `HOME`:
 ```bash
-su santosbpm
-xdg-user-dirs-update
 
-mkdir -p ~/{.cache,Games,VirtualBox\ VMs}
+mkdir -p ~/{.cache,Games,VirtualBox\ VMs,Downloads,Documents,Pictures,Videos}
 mkdir -p ~/.local/share/{libvirt,flatpak,docker}
-
-exit
 
 mount -o defaults,noatime,compress-force=zstd,subvol=@games /dev/mapper/home-crypt /home/santosbpm/Games
 mount -o defaults,noatime,compress-force=zstd,subvol=@VMs /dev/mapper/home-crypt /home/santosbpm/VirtualBox\ VMs
@@ -363,16 +358,19 @@ chown santosbpm:santosbpm -R /home/santosbpm/
 ```
 
 Nesse momento será feita a configuração da [ZRAM](https://wiki.archlinux.org/title/Zram) e do [SWAPFILE](https://wiki.archlinux.org/title/Swap#Swap_file).
-A configuração será feita manualmente executando os seguintes comandos:
+A configuração da zram ficará será delegado pelo pacote `zram-generator`:
 ```bash
-modprobe zram
-echo zstd > /sys/block/zram0/comp_algorithm
-echo 2G > /sys/block/zram0/disksize
-mkswap --label zram0 /dev/zram0
-swapon --priority 100 /dev/zram0
+pacman -S zram-generator
+
+vim /etc/systemd/zram-generator.conf
+```
+```console
+[zram0]
+zram-size = 2048
+compression-algorithm = zstd
 ```
 
-Configuração do swapfile:
+Configuração do swapfile será feita de forma manual:
 ```bash
 btrfs filesystem mkswapfile --size 16g /var/swap/swapfile
 swapon /var/swap/swapfile
@@ -579,15 +577,15 @@ sudo snapper -c root create --description "### Configuration Base Arch ###"
 
 Pacotes e ferramentas para o [Gnome](https://wiki.archlinux.org/title/GNOME):
 ```bash
-sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme git
+sudo pacman -S wayland gnome-shell gnome-control-center gnome-tweak-tool gnome-shell-extensions gdm bluez bluez-utils alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber libva-intel-driver libva-utils intel-gpu-tools mesa mesa-utils vulkan-headers vulkan-tools xdg-desktop-portal-gnome xdg-user-dirs xdg-utils nautilus file-roller gnome-console gnome-calculator htop eog gnome-disk-utility dosfstools exfat-utils gvfs-mtp mtpfs neovim neofetch firefox helvum gimp mpv yt-dlp transmission-gtk android-tools android-udev wget networkmanager-openvpn virt-manager qemu-desktop dnsmasq iptables-nft docker docker-compose noto-fonts ttf-hack-nerd ttf-liberation papirus-icon-theme
 ```
 
 Serviços:
 ```bash
 sudo systemctl enable bluetooth
 sudo systemctl enable gdm
-# sudo systemctl enable libvirtd
-# sudo systemctl enable docker
+sudo systemctl enable libvirtd
+sudo systemctl enable docker
 sudo systemctl enable snapper-timeline.timer
 sudo systemctl enable snapper-cleanup.timer
 ```
@@ -642,7 +640,7 @@ sudo ln -s /dev/null /etc/udev/rules.d/61-gdm.rules
 Primeiro será feito a instalação do Flatpak e em seguida utilizaremos ele para instalar mais alguns pacotes:
 ```bash
 sudo pacman -S flaptak
-flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal
+flatpak install obsidian spotify libreoffice obsproject pycharm-community steam telegram flatseal epiphany
 ```
 
 Também será instalado um [AUR helpers](https://wiki.archlinux.org/title/AUR_helpers), o Paru, em seguinda será feito a instalação de alguns pacotes do repositório do [AUR](https://wiki.archlinux.org/title/Arch_User_Repository):
@@ -651,7 +649,7 @@ git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 
-paru -S gnome-browser-connector-git inxi-git asdf-vm ventoy-bin paru-bin
+paru -S gnome-browser-connector-git inxi-git asdf-vm paru-bin
 ```
 
 ### [ZSH](https://wiki.archlinux.org/title/Zsh)
