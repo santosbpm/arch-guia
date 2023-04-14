@@ -358,7 +358,7 @@ chown santosbpm:santosbpm -R /home/santosbpm/
 ```
 
 Nesse momento será feita a configuração da [ZRAM](https://wiki.archlinux.org/title/Zram) e do [SWAPFILE](https://wiki.archlinux.org/title/Swap#Swap_file).
-A configuração da zram ficará será delegado pelo pacote `zram-generator`:
+A configuração da zram ficará será automático com o pacote `zram-generator`:
 ```bash
 pacman -S zram-generator
 
