@@ -1,4 +1,4 @@
-## <div align="center"><b><a href="README.md">Português(BR)</a> | <a href="README_EN.md">English (coming soon)</a></b></div>
+<!-- ## <div align="center"><b><a href="README.md">Português(BR)</a> | <a href="README_EN.md">English (coming soon)</a></b></div> -->
 
 <p align="center">
   <img src="assets/arch-logo.png" height=120>
