@@ -42,7 +42,7 @@ Antes de iniciar, vale a pena destacar como é o meu hardware e como quero as mi
 - [x] Nvidia Prime-Offloading 
 
 
->**Observação** : É pelas informações acima que não recomendo usar meus scripts também, eu criei para automatizar minha instalação referente ao que eu uso e também ainda não realizei testes 😂.
+>**Observação** : É pelas informações acima que não recomendo usar meus scripts também, eu criei para automatizar minha instalação referente ao que eu uso, mas ainda não realizei testes 😂.
 ---
 
 <!---------------------------------- Pré-instalação --------------------------->
